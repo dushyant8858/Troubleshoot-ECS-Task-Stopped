@@ -21,10 +21,9 @@ COPY --from=BUILDER /home/app/target/demo-0.0.1-SNAPSHOT.jar /usr/local/lib/fron
 EXPOSE ${server_port}
 ENTRYPOINT java -Dsome.prop=MyAppIsPassed -Dserver.port=${SERVER_PORT} -Drest.hostname=${REST_HOSTNAME} -Drest.port=${REST_PORT} -jar /usr/local/lib/frontenddatetime-demo.jar
 
-# docker build -t frontenddatetime:withSDcfn --build-arg server_port=8080 --build-arg rest_hostname=Greeting.Greeting --build-arg rest_port=8084 .
-# docker build -t frontenddatetime:latest --build-arg server_port=8080 --build-arg rest_hostname=greeting --build-arg rest_port=8084 --no-cache .
-# docker rm frontenddatetime && docker run -itd --network=java-mvn -p 8080:8080 --name frontenddatetime frontenddatetime
-# docker tag frontenddatetime:latest 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/frontenddatetime:latest
-# docker push 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/frontenddatetime:latest
+# docker build -t frontenddatetime:latest --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=80 --no-cache .
+# docker rm frontenddatetime && docker run -itd --network=java-mvn -p 80:80 --name frontenddatetime frontenddatetime
+# docker tag frontenddatetime:latest dushyant8858/frontenddatetime:latest
+# docker push dushyant8858/frontenddatetime:latest
 
-# aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/pt-portal
+# aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 111xxxxxx111.dkr.ecr.us-east-1.amazonaws.com/pt-portal

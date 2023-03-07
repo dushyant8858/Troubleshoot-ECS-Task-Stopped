@@ -26,7 +26,8 @@ Parameters:
     Description: PLM FrontEndDateTime service
   FrontEndDateTimeImageUrl:
     Type: String
-    Default: httpd:latest
+    # Default: httpd:latest
+    Default: dushyant8858/frontenddatetime:latest
     Description: The url of a docker image that contains the FrontEndDateTime application process that will handle the traffic for this service
   FrontEndDateTimeECRRepositoryName:
     Type: String
@@ -49,7 +50,7 @@ Parameters:
     Description: How much memory in megabytes to give the 
   FrontEndDateTimeDesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
     Description: How many copies of the service task to run
 
 # BackEndGreeting = BackEndGreeting
@@ -60,7 +61,8 @@ Parameters:
     Description: PLM BackEndGreeting service
   BackEndGreetingImageUrl:
     Type: String
-    Default: traefik/whoami:latest
+    # Default: traefik/whoami:latest
+    Default: dushyant8858/backendgreeting:latest
     Description: The url of a docker image that contains the  application process that will handle the traffic for this service
   BackEndGreetingECRRepositoryName:
     Type: String
@@ -83,7 +85,7 @@ Parameters:
     Description: How much memory in megabytes to give the 
   BackEndGreetingDesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
     Description: How many copies of the service task to run
 
 # ALB Parameters 
@@ -540,8 +542,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      # HealthCheckPath: /currentFrontEndDateTime
-      HealthCheckPath: /
+      HealthCheckPath: /frontenddatetime/backendgreeting
+      # HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
@@ -588,7 +590,7 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'FrontEndDateTimeECSService.Name' ] ] 
-      MinCapacity: 1
+      MinCapacity: 0
       MaxCapacity: 2
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
@@ -760,8 +762,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      # HealthCheckPath: /BackEndGreeting
-      HealthCheckPath: /health
+      HealthCheckPath: /BackEndGreeting
+      # HealthCheckPath: /health
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
@@ -810,7 +812,7 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'BackEndGreetingECSService.Name' ] ] 
-      MinCapacity: 1
+      MinCapacity: 0
       MaxCapacity: 2
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
@@ -860,7 +862,8 @@ Outputs:
   FrontEndDateTimeExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/currentFrontEndDateTime
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/FrontEndDateTime
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/FrontEndDateTime
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
@@ -883,7 +886,8 @@ Outputs:
   BackEndGreetingExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/BackEndGreeting
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/BackEndGreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/BackEndGreeting
     Export:
       Name: !Sub ${EnvironmentName}:BackEndGreetingExternalUrl
   BackEndGreetingPrivateServiceDiscoveryNamespace:
@@ -896,6 +900,7 @@ Outputs:
   FrontEndDateTimeBackEndGreetingExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/currentFrontEndDateTime/BackEndGreeting
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/FrontEndDateTime/BackEndGreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/FrontEndDateTime/BackEndGreeting
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeBackEndGreetingExternalUrl

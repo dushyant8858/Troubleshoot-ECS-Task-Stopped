@@ -9,7 +9,7 @@ RUN mvn -f /home/app/pom.xml clean package
 # FROM openjdk:8-jdk-alpine as PRODUCTION
 FROM openjdk:11-jre-slim as PRODUCTION
 
-ARG server_port=80
+ARG server_port=8080
 
 ENV SERVER_PORT=${server_port}
 
@@ -19,9 +19,9 @@ EXPOSE ${server_port}
 # ENTRYPOINT java -Xmx1024m -Xms1024m -Dsome.prop=MyAppIsPassed -Dserver.port=${SERVER_PORT} -jar /usr/local/lib/backendgreeting-demo.jar
 ENTRYPOINT java -Dsome.prop=MyAppIsPassed -Dserver.port=${SERVER_PORT} -jar /usr/local/lib/backendgreeting-demo.jar
 
-# docker build -t backendgreeting:latest --build-arg server_port=80 --no-cache .
-# docker rm backendgreeting && docker run -itd --network=java-mvn -p 80:80 --name backendgreeting backendgreeting
-# docker tag backendgreeting:latest 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/backendgreeting:latest
-# docker push 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/backendgreeting:latest
+# docker build -t backendgreeting:latest --build-arg server_port=8080 --no-cache .
+# docker rm backendgreeting && docker run -itd --network=java-mvn -p 8080:8080 --name backendgreeting backendgreeting
+# docker tag backendgreeting:latest dushyant8858/backendgreeting:latest
+# docker push dushyant8858/backendgreeting:latest
 
-# aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 275xxxxxx462.dkr.ecr.us-east-1.amazonaws.com/pt-portal
+# aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 111xxxxxx111.dkr.ecr.us-east-1.amazonaws.com/pt-portal
