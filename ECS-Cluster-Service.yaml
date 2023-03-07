@@ -1,8 +1,8 @@
 # aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 # aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 
-# aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/Frontend:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=KeycloakImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
-# aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/Frontend:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=KeycloakImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
+# aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEnd:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEnd:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
 
 # while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
 
@@ -18,67 +18,69 @@ Parameters:
     Default: PLM
     Description: The name of the environment to add this service to
 
-# Frontend Service Parameters 
-  FrontendServiceName:
+# FrontEnd = DateTim
+# FrontEnd Service Parameters 
+  FrontEndServiceName:
     Type: String
-    Default: Frontend
-    Description: PLM Frontend service
-  FrontendImageUrl:
+    Default: FrontEnd
+    Description: PLM FrontEnd service
+  FrontEndImageUrl:
     Type: String
-    Default: 8xxxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.com/PLM-Frontend:aws-cfn-PLM
-    Description: The url of a docker image that contains the FRONTEND application process that will handle the traffic for this service
-  FrontendECRRepositoryName:
+    Default: 8xxxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.com/PLM-FrontEnd:aws-cfn-PLM
+    Description: The url of a docker image that contains the FrontEnd application process that will handle the traffic for this service
+  FrontEndECRRepositoryName:
     Type: String
-    Default: 'PLM-frontend'
-    Description: ECR repository Name that you need to create for Frontend images 
-  FrontendContainerPort:
+    Default: 'PLM-FrontEnd'
+    Description: ECR repository Name that you need to create for FrontEnd images 
+  FrontEndContainerPort:
     Type: Number
-    Default: '80'
+    Default: '8083'
     Description: What port number the application inside the docker container is binding to
-  FrontendContainerCpu:
+  FrontEndContainerCpu:
     Type: Number
     Default: 992
     # Default: 1024    
     Description: How much CPU to give the container. 1024 is 1 CPU
-  FrontendContainerMemory:
+  FrontEndContainerMemory:
     Type: Number
     Default: 887
     # Default: 4096
     Description: How much memory in megabytes to give the 
-  FrontendDesiredCount:
+  FrontEndDesiredCount:
     Type: Number
     Default: 0
     Description: How many copies of the service task to run
 
-# Backend Service Parameters 
-  BackendServiceName:
+# BackEnd = BackEnd
+# BackEnd Service Parameters 
+  BackEndServiceName:
     Type: String
-    Default: 
+    Default: BackEnd
     Description: PLM service
-  BackendImageUrl:
+  BackEndImageUrl:
     Type: String
     Default: 8xxxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.com/PLM-:aws-cfn-PLM
     Description: The url of a docker image that contains the  application process that will handle the traffic for this service
-  BackendECRRepositoryName:
+  BackEndECRRepositoryName:
     Type: String
-    Default: -PLM-test
+    Default: nginx
     Description: ECR repository Name that you need to create for  images 
-  BackendContainerPort:
+  BackEndContainerPort:
     Type: Number
-    Default: '9080'
+    Default: '8084'
     # Default: '80'
     Description: What port number the application inside the docker container is binding to
-  BackendContainerCpu:
+  BackEndContainerCpu:
     Type: Number
     Default: 992
     # Default: 1024    
     Description: How much CPU to give the container. 1024 is 1 CPU
- BackendContainerMemory:
+  BackEndContainerMemory:
     Type: Number
     Default: 887
     # Default: 4096
     Description: How much memory in megabytes to give the 
-  BackendDesiredCount:
+  BackEndDesiredCount:
     Type: Number
     Default: 0
     Description: How many copies of the service task to run
@@ -100,20 +102,20 @@ Parameters:
   HostedZoneId:
     Description: HostedZone ID
     Type: String
-    # Default: 'Z38JIISUVMYB2F'
+    Default: 'Z38JIISUVMYB2F'
   HostedZoneName:
     Description: HostedZone Name
     Type: String
-    # Default: 'dubaria.myinstance.com'
-  PublicLoadBalancerSubDomainNameWithDot:
+    Default: 'dubaria.myinstance.com'
+  PLMPublicLoadBalancerSubDomainNameWithDot:
     Description: 'Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires ParentZoneStack parameter!'
     Type: String
     Default: '.'
 
-# DomainKeycloakPrivateServiceDiscoveryNamespace
-  DomainKeycloakPrivateServiceDiscoveryNamespace:
+# DomainBackEndPrivateServiceDiscoveryNamespace
+  DomainBackEndPrivateServiceDiscoveryNamespace:
     Type: String
-    Default: keycloak
+    Default: BackEnd
     Description: The name of the namespace. Services are prepended, for example user.service.production
 
 # ASG / AutoScaling Parameters
@@ -130,12 +132,6 @@ Parameters:
     ConstraintDescription: Must be a size from t2 instance families
     Default: t2.micro
 
-# SSM
-  # DB_PASSWORD:
-  #             Value: '{{resolve:ssm-secure:KEYCLOAK_DB_PASSWORD:1}}':
-  #     Password: '{{resolve:ssm-secure:IAMUserPassword:10}}'
-
-
 Mappings:
   InstanceArchMap:
     t2.micro:
@@ -151,67 +147,65 @@ Conditions:
 
 Resources:
 # ECS Resources
-  ECSCluster:
+  PLMEcsCluster:
     Type: AWS::ECS::Cluster
 
-  PublicLoadBalancerSG:
+  # Public load balancer, hosted in public subnets that is accessible to the public, and is intended to route traffic to one or more public facing services. This is used for accepting traffic from the public internet and directing it to public facing microservices
+  PLMPublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the public facing load balancer
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
-        # Allow access to ALB from anywhere on the internet to  ECS Service 
+          # Allow access to ALB from anywhere on the internet to FrontEnd ECS Service 
           - CidrIp: 0.0.0.0/0
-          # - CidrIp: 71.150.221.250/32
             # IpProtocol: -1
             IpProtocol: tcp
-            FromPort: !Ref ContainerPort
-            ToPort: !Ref ContainerPort
-            Description: Allow access to ALB from anywhere on the internet to  ECS Service
-        # Allow access to ALB from anywhere on the internet to FRONTEND ECS Service 
+            FromPort: !Ref FrontEndContainerPort
+            ToPort: !Ref FrontEndContainerPort
+            Description: Allow access to ALB from anywhere on the internet to FrontEnd ECS Service
+          # Allow access to ALB from anywhere on the internet to BackEnd ECS Service
           - CidrIp: 0.0.0.0/0
-          # - CidrIp: 71.150.221.250/32
             # IpProtocol: -1
             IpProtocol: tcp
-            FromPort: !Ref FrontendContainerPort
-            ToPort: !Ref FrontendContainerPort
-            Description: Allow access to ALB from anywhere on the internet to  ECS Service
-        # Allow access to ALB from anywhere on the internet to KEYCLOAK ECS Service
-          - CidrIp: 0.0.0.0/0
-          # - CidrIp: 71.150.221.250/32
-            # IpProtocol: -1
-            IpProtocol: tcp
-            FromPort: !Ref KeycloakContainerPort
-            ToPort: !Ref KeycloakContainerPort
-            Description: Allow access to ALB from anywhere on the internet to KEYCLOAK ECS Service
+            FromPort: !Ref BackEndContainerPort
+            ToPort: !Ref BackEndContainerPort
+            Description: Allow access to ALB from anywhere on the internet to BackEnd ECS Service
 
-  PublicLoadBalancer:
+  PLMPublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
-          Value: '180'
+          Value: '30'
       Subnets:
         # The load balancer is placed into the public subnets, so that traffic from the internet can reach the load balancer directly via the internet gateway
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
-      SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+      SecurityGroups: [!Ref 'PLMPublicLoadBalancerSG']
 
-  PublicLoadBalancerRecordSet:
+  PLMPublicLoadBalancerRecordSet:
     Type: 'AWS::Route53::RecordSet'
     Properties:
       HostedZoneId: !Ref HostedZoneId
       Name: !Sub
-      - '${PublicLoadBalancerSubDomainNameWithDot}${HostedZoneName}'
-      - SubDomainNameWithDot: !Ref PublicLoadBalancerSubDomainNameWithDot
-        HostedZoneName: !Ref HostedZoneName
+        - '${PLMPublicLoadBalancerSubDomainNameWithDot}${HostedZoneName}'
+        - SubDomainNameWithDot: !Ref PLMPublicLoadBalancerSubDomainNameWithDot
+          HostedZoneName: !Ref HostedZoneName
       ResourceRecords:
-      - !GetAtt 'PublicLoadBalancer.DNSName'
+        - !GetAtt 'PLMPublicLoadBalancer.DNSName'
       TTL: 300
       Type: CNAME
 
+  BackEndPrivateServiceDiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Ref DomainBackEndPrivateServiceDiscoveryNamespace
+      # Name: !Ref BackEndServiceName
+      Vpc:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
 
 ###################
 # ASG resources
@@ -234,7 +228,6 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        # - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
   PLMEcsLaunchTemplate:
     Type: 'AWS::EC2::LaunchTemplate'
     Metadata:
@@ -302,7 +295,7 @@ Resources:
               content: !Join 
                 - ''
                 - - 'ECS_CLUSTER='
-                  - !Ref 'ECSCluster'
+                  - !Ref 'PLMEcsCluster'
                   - |+
 
                   - >
@@ -341,8 +334,8 @@ Resources:
         KeyName: !Ref KeyPair
         SecurityGroupIds:
           - !Ref ContainerSecurityGroup
-          - !Ref FrontendContainerSecurityGroup
-          - !Ref KeycloakContainerSecurityGroup
+          - !Ref FrontEndContainerSecurityGroup
+          - !Ref BackEndContainerSecurityGroup
           - !Ref NishitDushyantPLMEcsInstanceSecurityGroup
         IamInstanceProfile: 
           Name: !Ref ECSInstanceProfileRole
@@ -354,15 +347,7 @@ Resources:
               - |
                 yum update -y 
               - |
-                touch /tmp/PLM-realm.json 
-              - |
-                chmod 777 /tmp/PLM-realm.json
-              - |
-                curl https://raw.githubusercontent.com/PLM/Authentication/main/PLM-realm.json -o /tmp/PLM-realm.json
-              - |
                 yum install aws-cfn-bootstrap -y 
-              - |
-                yum update aws-cfn-bootstrap -y 
               - '/opt/aws/bin/cfn-init -v '
               - '   --stack '
               - !Ref 'AWS::StackId'
@@ -387,7 +372,7 @@ Resources:
                 Value: !Sub '${AWS::StackName}-PLMEcsASG'
   PLMEcsASG:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: ECSCluster
+    DependsOn: PLMEcsCluster
     Properties:
       LaunchTemplate:
         LaunchTemplateId: !Ref PLMEcsLaunchTemplate
@@ -411,86 +396,94 @@ Resources:
         Count: '1'
         Timeout: PT5M
 
-  NishitDushyantPLMEcsInstanceSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Nishit Dushyant ECS Instance Security Group
-      VpcId: {'Fn::ImportValue': !Sub '${EnvironmentName}:VpcId'}
-      # SecurityGroupIngress:
-      #   - Description: Allow traffic from [NISHITs Home to PLM ECS Instance]
-      #     IpProtocol: tcp
-      #     FromPort: 22
-      #     ToPort: 22
-      #     # CidrIp: !Join ['' , [{'Fn::ImportValue': !Sub '${EnvironmentName}:NatGatewayOneAttachment'} , '/32' ] ]
-      #     # http://checkip.amazonaws.com/
-      #     CidrIp: !Join ['' , ['71.150.221.250' , '/32' ] ]
-      #   - Description: Allow traffic from [Dushyants Home to PLM ECS Instance]
-      #     IpProtocol: tcp
-      #     FromPort: 22
-      #     ToPort: 22
-      #     CidrIp: !Join ['' , ['74.141.7.117' , '/32' ] ]
-      # Tags: 
-      #   - Key: Name
-      #     Value: NISHIT+DUSHYANT ECS Instance SSH
+  # PLMEcsInstanceSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     GroupDescription: Nishit Dushyant ECS Instance Security Group
+  #     VpcId: {'Fn::ImportValue': !Sub '${EnvironmentName}:VpcId'}
+  #     # SecurityGroupIngress:
+  #     #   - Description: Allow traffic from [NISHITs Home to PLM ECS Instance]
+  #     #     IpProtocol: tcp
+  #     #     FromPort: 22
+  #     #     ToPort: 22
+  #     #     # CidrIp: !Join ['' , [{'Fn::ImportValue': !Sub '${EnvironmentName}:NatGatewayOneAttachment'} , '/32' ] ]
+  #     #     # http://checkip.amazonaws.com/
+  #     #     CidrIp: !Join ['' , ['71.150.221.250' , '/32' ] ]
+  #     #   - Description: Allow traffic from [Dushyants Home to PLM ECS Instance]
+  #     #     IpProtocol: tcp
+  #     #     FromPort: 22
+  #     #     ToPort: 22
+  #     #     CidrIp: !Join ['' , ['74.141.7.117' , '/32' ] ]
+  #     # Tags: 
+  #     #   - Key: Name
+  #     #     Value: DUSHYANT ECS Instance SSH
 
 
-###################
-#  resources
-###################
+####################
+# FrontEnd resources
+####################
   # A security group for the containers we will run in Fargate. Rules are added to this security group based on what ingress you add for the cluster.
-  ContainerSecurityGroup:
+  FrontEndContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the Fargate  containers
+      GroupDescription: Access to the Fargate FrontEnd containers
       # VpcId: !Ref 'VPC' Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
-        # # Allow access ONLY from ALB 
-        # - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
-        #   # IpProtocol: -1
-        #   IpProtocol: tcp
-        #   FromPort: !Ref ContainerPort
-        #   ToPort: !Ref ContainerPort
-        #   Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${ContainerPort}
-        # - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
-        - CidrIp: 
-            Fn::ImportValue: !Sub ${EnvironmentName}:VpcCIDR 
-          IpProtocol: tcp
-          FromPort: 32768
-          ToPort: 65535
-          Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${ContainerPort}
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref FrontEndContainerPort
+            ToPort: !Ref FrontEndContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${FrontEndContainerPort}
 
   # This is a role which is used by the ECS tasks themselves.
-  ECSTaskExecutionRole:
+  FrontEndECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs-tasks.amazonaws.com]
-            Action: ['sts:AssumeRole']
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-  ECSTaskRole:
+      Policies:
+        - PolicyName: FrontEndECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Allow the ECS Tasks to download images from ECR
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+
+                # Allow the ECS tasks to upload logs to CloudWatch
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'
+  FrontEndECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs-tasks.amazonaws.com]
-            Action: ['sts:AssumeRole']
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
       # Policies:
-      #   - PolicyName: ECSTaskRolePolicy
+      #   - PolicyName: FrontEndECSTaskRolePolicy
       #     PolicyDocument:
       #       Statement:
       #       - Effect: Allow
@@ -505,730 +498,449 @@ Resources:
       #         Resource: '*'
 
   # A log group for storing the stdout logs from this service's containers
-  LogGroup:
+  FrontEndLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSService-${ServiceName}
-      RetentionInDays: 14
+      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${FrontEndServiceName}
+      RetentionInDays: 7
 
-  # The task definition. This is a simple metadata description of what container to run, and what resource requirements it has.
-  TaskDefinition:
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  FrontEndTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DeletionPolicy: Retain
     Properties:
-      Family: !Ref 'ServiceName'
-      Cpu: !Ref 'ContainerCpu'
-      Memory: !Ref 'ContainerMemory'
-      NetworkMode: bridge
+      Family: !Ref 'FrontEndServiceName'
+      Cpu: !Ref 'FrontEndContainerCpu'
+      Memory: !Ref 'FrontEndContainerMemory'
+      NetworkMode: awsvpc
       RequiresCompatibilities:
-        - EC2
-      ExecutionRoleArn: !GetAtt 'ECSTaskExecutionRole.Arn'
-      TaskRoleArn: !GetAtt 'ECSTaskRole.Arn'
+        - FARGATE
+      ExecutionRoleArn: !GetAtt 'FrontEndECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'FrontEndECSTaskRole.Arn'
       ContainerDefinitions:
-        - Name: !Ref 'ServiceName'
-          Cpu: !Ref 'ContainerCpu'
-          Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'ImageUrl'
-          Environment: 
-            - Name: PROFILE_ACTIVE
-              Value: stage
+        - Name: !Ref 'FrontEndServiceName'
+          Cpu: !Ref 'FrontEndContainerCpu'
+          Memory: !Ref 'FrontEndContainerMemory'
+          # Image: !Ref 'FrontEndImageUrl'
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndECRRepository}:latest
           PortMappings:
-            - ContainerPort: !Ref 'ContainerPort'
-              HostPort: 0
-              Protocol: tcp
+            - ContainerPort: !Ref 'FrontEndContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Ref LogGroup
+              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${FrontEndServiceName}
               awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: !Ref 'ServiceName'
+              awslogs-stream-prefix: !Ref 'FrontEndServiceName'
 
   # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
-  ECSService:
+  FrontEndECSService:
     Type: AWS::ECS::Service
     DependsOn: 
-     - LoadBalancerRule
-     - KeycloakECSService
-     - PLMEcsASG
+      - BackEndECSService
+      - FrontEndLoadBalancerRule
     Properties:
-      # ServiceName: !Ref 'ServiceName'
-      Cluster: !Ref ECSCluster
-      LaunchType: EC2
-      HealthCheckGracePeriodSeconds: '600'
+      # ServiceName: !Ref 'FrontEndServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: FARGATE
+      PlatformVersion: 1.4.0
+      HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
-        MaximumPercent: '100'
-        MinimumHealthyPercent: '0'
-      DesiredCount: !Ref DesiredCount
-      TaskDefinition: !Ref 'TaskDefinition'
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref FrontEndDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref FrontEndContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'FrontEndTaskDefinition'
       LoadBalancers:
-        - ContainerName: !Ref 'ServiceName'
-          ContainerPort: !Ref ContainerPort
-          TargetGroupArn: !Ref 'TargetGroup'
+        - ContainerName: !Ref 'FrontEndServiceName'
+          ContainerPort: !Ref FrontEndContainerPort
+          TargetGroupArn: !Ref 'FrontEndTargetGroup'
 
   # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically distribute traffic across all the targets.
-  TargetGroup:
+  FrontEndTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /actuator/health
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /currentFrontEnd
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 15
-      HealthyThresholdCount: 5
-      Matcher: 
-        HttpCode: 200
-      TargetType: instance
-      # Name: !Ref 'ServiceName'
-      Port: !Ref 'ContainerPort'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      # Name: !Ref 'FrontEndServiceName'
+      Port: !Ref 'FrontEndContainerPort'
       Protocol: HTTP
-      UnhealthyThresholdCount: 3
+      UnhealthyThresholdCount: 2
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
 
-  PublicLoadBalancerListener:
+  FrontEndPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: PublicLoadBalancer
+    DependsOn: PLMPublicLoadBalancer
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref 'TargetGroup'
+        - TargetGroupArn: !Ref 'FrontEndTargetGroup'
           Type: 'forward'
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
-      Port: !Ref ContainerPort
+      Port: !Ref FrontEndContainerPort
       Protocol: HTTP
 
   # Create a rule on the load balancer for routing traffic to the target group
-  LoadBalancerRule:
+  FrontEndLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
-        - TargetGroupArn: !Ref 'TargetGroup'
+        - TargetGroupArn: !Ref 'FrontEndTargetGroup'
           Type: 'forward'
       Conditions:
         - Field: path-pattern
           Values: [!Ref 'Path']
-      ListenerArn: !Ref PublicLoadBalancerListener
+      ListenerArn: !Ref FrontEndPublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
   # Enable autoscaling for this service
-  ScalableTarget:
+  FrontEndScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: ECSService
+    DependsOn: FrontEndECSService
     Properties:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
-      ResourceId: !Join [ '/' , [ 'service' , !Ref 'ECSCluster' , !GetAtt 'ECSService.Name' ] ] 
-      MinCapacity: 0
-      MaxCapacity: 1
+      ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'FrontEndECSService.Name' ] ] 
+      MinCapacity: 1
+      MaxCapacity: 2
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
-  TargetTrackingScalingPolicy:
+  # Create Track scaling policies for the FrontEnd service
+  FrontEndTargetTrackingScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     DependsOn: 
-      - LoadBalancerRule
-      - ECSService
-      - ScalableTarget
+      - FrontEndLoadBalancerRule
+      - FrontEndECSService
+      - FrontEndScalableTarget
     Properties:
-      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'ECSService.Name' ] ]
+      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'FrontEndECSService.Name' ] ]
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref ScalableTarget
+      ScalingTargetId: !Ref FrontEndScalableTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 100.00
-        ScaleInCooldown: 300
-        ScaleOutCooldown: 120
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 60
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageMemoryUtilization
 
-###################
-# Frontend resources
-###################
+#################### 
+# BackEnd resources
+#################### 
   # A security group for the containers we will run in Fargate. Rules are added to this security group based on what ingress you add for the cluster.
-  FrontendContainerSecurityGroup:
+  BackEndContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the Fargate Frontend containers
-      VpcId: 
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      # SecurityGroupIngress:
-      #   # # Allow access ONLY from ALB 
-      #   # - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
-      #   #   # IpProtocol: -1
-      #   #   IpProtocol: tcp
-      #   #   FromPort: !Ref FrontendContainerPort
-      #   #   ToPort: !Ref FrontendContainerPort
-      #   #   Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${FrontendContainerPort}
-      #   # - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
-      #   - CidrIp: 0.0.0.0/0
-      #     IpProtocol: tcp
-      #     FromPort: !Ref FrontendContainerPort
-      #     ToPort: !Ref FrontendContainerPort
-      #     Description: !Sub Allow access from ALL only on FrontendContainerPort:${FrontendContainerPort}
-
-  # This is a role which is used by the ECS tasks themselves.
-  FrontendECSTaskExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs-tasks.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Path: /
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-  FrontendECSTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs-tasks.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Path: /
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-
-  # A log group for storing the stdout logs from this service's containers
-  FrontendLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSService-${FrontendServiceName}
-      RetentionInDays: 14
-
-  # The task definition. This is a simple metadata description of what container to run, and what resource requirements it has.
-  FrontendTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    DeletionPolicy: Retain
-    Properties:
-      Family: !Ref 'FrontendServiceName'
-      Cpu: !Ref 'FrontendContainerCpu'
-      Memory: !Ref 'FrontendContainerMemory'
-      NetworkMode: bridge
-      RequiresCompatibilities:
-        - EC2
-      ExecutionRoleArn: !GetAtt 'FrontendECSTaskExecutionRole.Arn'
-      TaskRoleArn: !GetAtt 'FrontendECSTaskRole.Arn'
-      ContainerDefinitions:
-        - Name: !Ref 'FrontendServiceName'
-          Cpu: !Ref 'FrontendContainerCpu'
-          Memory: !Ref 'FrontendContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontendECRRepositoryName}'
-          PortMappings:
-            - ContainerPort: !Ref 'FrontendContainerPort'
-              HostPort: 0
-              Protocol: tcp
-          LogConfiguration:
-            LogDriver: 'awslogs'
-            Options:
-              awslogs-group: !Ref FrontendLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: !Ref 'FrontendServiceName'
-
-  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
-  FrontendECSService:
-    Type: AWS::ECS::Service
-    DependsOn: 
-     - FrontendLoadBalancerRule
-     - KeycloakECSService
-     - PLMEcsASG
-    Properties:
-      # ServiceName: !Ref 'FrontendServiceName'
-      Cluster: !Ref ECSCluster
-      LaunchType: EC2
-      HealthCheckGracePeriodSeconds: '600'
-      DeploymentConfiguration:
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
-        MaximumPercent: '100'
-        MinimumHealthyPercent: '0'
-      DesiredCount: !Ref FrontendDesiredCount
-      TaskDefinition: !Ref 'FrontendTaskDefinition'
-      LoadBalancers:
-        - ContainerName: !Ref 'FrontendServiceName'
-          ContainerPort: !Ref FrontendContainerPort
-          TargetGroupArn: !Ref 'FrontendTargetGroup'
-
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically distribute traffic across all the targets.
-  FrontendTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 15
-      HealthyThresholdCount: 5
-      Matcher: 
-        HttpCode: 200
-      TargetType: instance
-      # Name: !Ref 'FrontendServiceName'
-      Port: !Ref 'FrontendContainerPort'
-      Protocol: HTTP
-      UnhealthyThresholdCount: 3
-      VpcId:
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 10
-
-  FrontendPublicLoadBalancerListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: PublicLoadBalancer
-    Properties:
-      DefaultActions:
-        - TargetGroupArn: !Ref 'FrontendTargetGroup'
-          Type: 'forward'
-      LoadBalancerArn: !Ref 'PublicLoadBalancer'
-      Port: !Ref FrontendContainerPort
-      Protocol: HTTP
-
-  # Create a rule on the load balancer for routing traffic to the target group
-  FrontendLoadBalancerRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
-        - TargetGroupArn: !Ref 'FrontendTargetGroup'
-          Type: 'forward'
-      Conditions:
-        - Field: path-pattern
-          Values: [!Ref 'Path']
-      ListenerArn: !Ref FrontendPublicLoadBalancerListener
-      Priority: !Ref 'Priority'
-
-  # Enable autoscaling for this service
-  FrontendScalableTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: FrontendECSService
-    Properties:
-      ServiceNamespace: 'ecs'
-      ScalableDimension: 'ecs:service:DesiredCount'
-      ResourceId: !Join [ '/' , [ 'service' , !Ref 'ECSCluster' , !GetAtt 'FrontendECSService.Name' ] ] 
-      MinCapacity: 0
-      MaxCapacity: 1
-      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
-
-  FrontendTargetTrackingScalingPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    DependsOn: 
-      - FrontendLoadBalancerRule
-      - FrontendECSService
-      - FrontendScalableTarget
-    Properties:
-      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'FrontendECSService.Name' ] ]
-      PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref FrontendScalableTarget
-      TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 100.00
-        ScaleInCooldown: 300
-        ScaleOutCooldown: 120
-        PredefinedMetricSpecification:
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-
-###################
-# Keycloak resources
-###################
-  # A security group for the containers we will run in Fargate. Rules are added to this security group based on what ingress you add for the cluster.
-  KeycloakContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Access to the Fargate Keycloak containers
+      GroupDescription: Access to the Fargate BackEnd containers
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
-        # # Allow access ONLY from ALB from anywhere on the internet
-        # - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
-        #   # IpProtocol: -1
-        #   IpProtocol: tcp
-        #   FromPort: !Ref KeycloakContainerPort
-        #   ToPort: !Ref KeycloakContainerPort
-        #   Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${KeycloakContainerPort}
-        - SourceSecurityGroupId: !Ref ContainerSecurityGroup
-          # IpProtocol: -1
-          IpProtocol: tcp
-          FromPort: 32768
-          ToPort: 65535
-          Description: !Sub Allow access ONLY from ContainerSecurityGroup:${ContainerSecurityGroup} on KeycloakContainerPort:${KeycloakContainerPort}
+          # Allow access ONLY from ALB from anywhere on the internet
+          - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref BackEndContainerPort
+            ToPort: !Ref BackEndContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on BackEndContainerPort:${BackEndContainerPort}
+          # Allow access ONLY from ALB from anywhere on the internet
+          - SourceSecurityGroupId: !Ref FrontEndContainerSecurityGroup
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref BackEndContainerPort
+            ToPort: !Ref BackEndContainerPort
+            Description: !Sub Allow access ONLY from FrontEndContainerSecurityGroup:${FrontEndContainerSecurityGroup} on BackEndContainerPort:${BackEndContainerPort}
 
   # This is a role which is used by the ECS tasks themselves.
-  KeycloakECSTaskExecutionRole:
+  BackEndECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs-tasks.amazonaws.com]
-            Action: ['sts:AssumeRole']
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+      Policies:
+        - PolicyName: BackEndAmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Allow the ECS Tasks to download images from ECR
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+
+                # Allow the ECS tasks to upload logs to CloudWatch
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'
+
+  BackEndECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      # Policies:
+      #   - PolicyName: FrontEndECSTaskRolePolicy
+      #     PolicyDocument:
+      #       Statement:
+      #       - Effect: Allow
+      #         Action:
+      #           # Allow the ECS Tasks to only Read from S3
+      #           - 's3:Get*'
+      #           - 's3:List*'
+      #           # Allow the ECS tasks to get Secrets from SSM
+      #           - 'ssm:Describe*'
+      #           - 'ssm:Get*'
+      #           - 'ssm:List*'
+      #         Resource: '*'
+
 
   # A log group for storing the stdout logs from this service's containers
-  KeycloakLogGroup:
+  BackEndLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSService-${KeycloakServiceName}
-      RetentionInDays: 14
+      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${BackEndServiceName}
+      RetentionInDays: 7
 
   # The task definition. This is a simple metadata description of what container to run, and what resource requirements it has.
-  KeycloakTaskDefinition:
+  BackEndTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DeletionPolicy: Retain
     Properties:
-      Family: !Ref 'KeycloakServiceName'
-      Cpu: !Ref 'KeycloakContainerCpu'
-      Memory: !Ref 'KeycloakContainerMemory'
-      NetworkMode: bridge
+      Family: !Ref 'BackEndServiceName'
+      Cpu: !Ref 'BackEndContainerCpu'
+      Memory: !Ref 'BackEndContainerMemory'
+      NetworkMode: awsvpc
       RequiresCompatibilities:
-        - EC2
-      ExecutionRoleArn: !GetAtt 'KeycloakECSTaskExecutionRole.Arn'
-      TaskRoleArn:
-        Fn::If:
-          - 'HasCustomRole'
-          - !Ref 'ECSTaskRole'
-          - !Ref "AWS::NoValue"
+        - FARGATE
+      TaskRoleArn: !GetAtt 'BackEndECSTaskRole.Arn'
+      ExecutionRoleArn: !GetAtt 'BackEndECSTaskExecutionRole.Arn'
       ContainerDefinitions:
-        - Name: !Ref 'KeycloakServiceName'
-          Cpu: !Ref 'KeycloakContainerCpu'
-          Memory: !Ref 'KeycloakContainerMemory'
-          Image: !Ref 'KeycloakImageUrl'
-          Environment: 
-            # - Name: DB_ADDR
-            #   Value:   {'Fn::ImportValue': !Sub '${EnvironmentName}:KeycloakDatabaseDNSName'}
-            # - Name: DB_ADDR
-            #   Value:  {'Fn::ImportValue': !Sub '${EnvironmentName}:KeycloakRecordSet'}
-            # - Name: DB_ADDR
-            #   Value: jk14wf3xwflwgxa.cnhx8kwsk7q2.us-west-2.rds.amazonaws.com
-            # - Name: DB_ADDR
-            #   Value: keycloak.postgres.dubaria.myinstance.com
-            - Name: DB_ADDR
-              Value: keycloak.postgres.PLMusa.com
-            - Name: DB_DATABASE
-              Value: PLM
-            - Name: DB_PASSWORD
-              Value: PLM-PLM
-            - Name: DB_PORT
-              Value: 5432
-            - Name: DB_SCHEMA
-              Value: public
-            - Name: DB_USER
-              Value: PLM
-            - Name: DB_VENDOR
-              Value: POSTGRES
-            - Name: KEYCLOAK_USER
-              Value: admin
-            - Name: KEYCLOAK_PASSWORD
-              Value: password-password
-            - Name: KEYCLOAK_IMPORT
-              Value: /tmp/PLM-realm.json
-            # - Name: KEYCLOAK_HTTP_PORT
-            #   Value: 8080
-            # - Name: KEYCLOAK_HTTPS_PORT
-            #   Value: 8443
-            # - Name: PROXY_ADDRESS_FORWARDING
-            #   Value: 'true'
+        - Name: !Ref 'BackEndServiceName'
+          Cpu: !Ref 'BackEndContainerCpu'
+          Memory: !Ref 'BackEndContainerMemory'
+          # Image: !Ref 'BackEndImageUrl'
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackEndECRRepositoryName}:latest
           PortMappings:
-            - ContainerPort: !Ref 'KeycloakContainerPort'
-              HostPort: 0
-              Protocol: tcp
+            - ContainerPort: !Ref 'BackEndContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Ref KeycloakLogGroup
+              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${BackEndServiceName}
               awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: !Ref 'KeycloakServiceName'
-          MountPoints:
-            - ContainerPath: /tmp/PLM-realm.json
-              ReadOnly: true
-              SourceVolume: PLM-realm
-      Volumes: 
-        - Name: PLM-realm
-          Host: 
-            SourcePath: /tmp/PLM-realm.json
+              awslogs-stream-prefix: !Ref 'BackEndServiceName'
 
   # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
-  KeycloakECSService:
+  BackEndECSService:
     Type: AWS::ECS::Service
-    DependsOn: 
-      - KeycloakLoadBalancerRule
-      - PLMEcsASG
+    DependsOn: BackEndLoadBalancerRule
     Properties:
-      # ServiceName: !Ref 'KeycloakServiceName'
-      Cluster: !Ref ECSCluster
-      LaunchType: EC2
-      HealthCheckGracePeriodSeconds: '600'
+      # ServiceName: !Ref 'BackEndServiceName'
+      # Cluster:
+      #   Fn::ImportValue: !Sub ${EnvironmentName}:PLMEcsCluster
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: FARGATE
+      PlatformVersion: 1.4.0
+      HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
-        MaximumPercent: '100'
-        MinimumHealthyPercent: '0'
-      DesiredCount: !Ref KeycloakDesiredCount
-      TaskDefinition: !Ref 'KeycloakTaskDefinition'
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref BackEndDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref BackEndContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'BackEndTaskDefinition'
       LoadBalancers:
-        - ContainerName: !Ref 'KeycloakServiceName'
-          ContainerPort: !Ref KeycloakContainerPort
-          TargetGroupArn: !Ref 'KeycloakTargetGroup'
-      # ServiceRegistries:
-      #   - RegistryArn: !GetAtt KeycloakServiceDiscoveryService.Arn
-      #     # ContainerPort: !Ref 'KeycloakContainerPort'
-      #     # ContainerName: !Ref 'KeycloakServiceName'
+        - ContainerName: !Ref 'BackEndServiceName'
+          ContainerPort: !Ref BackEndContainerPort
+          TargetGroupArn: !Ref 'BackEndTargetGroup'
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackEndServiceDiscoveryService.Arn
+          # ContainerPort: !Ref 'BackEndContainerPort'
+          # ContainerName: !Ref 'BackEndServiceName'
 
-  # # # Create a service discovery service in the private service namespace.
-  # # KeycloakServiceDiscoveryService:
-  # #   Type: AWS::ServiceDiscovery::Service
-  # #   DependsOn:
-  # #     - KeycloakPrivateServiceDiscoveryNamespace
-  # #   Properties:
-  # #     Name: !Ref KeycloakServiceName
-  # #     DnsConfig:
-  # #       DnsRecords: [{Type: A, TTL: "180"}]
-  # #       NamespaceId: !Ref KeycloakPrivateServiceDiscoveryNamespace
-  # #     HealthCheckCustomConfig:
-  # #       FailureThreshold: 2
+  # Create a service discovery service in the private service namespace.
+  BackEndServiceDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: !Ref BackEndServiceName
+      DnsConfig:
+        DnsRecords: [{Type: A, TTL: "30"}]
+        NamespaceId: !Ref BackEndPrivateServiceDiscoveryNamespace
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
 
-  # # KeycloakPrivateServiceDiscoveryNamespace:
-  # #   Type: AWS::ServiceDiscovery::PrivateDnsNamespace
-  # #   Properties:
-  # #     # Name: !Ref DomainKeycloakPrivateServiceDiscoveryNamespace
-  # #     Name: !Ref KeycloakServiceName
-  # #     Vpc:
-  # #       Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically distribute traffic across all the targets.
-  KeycloakTargetGroup:
+  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
+  BackEndTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /auth/
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /BackEnd
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 15
-      HealthyThresholdCount: 5
-      Matcher: 
-        HttpCode: 200
-      TargetType: instance
-      # Name: !Ref 'KeycloakServiceName'
-      Port: !Ref 'KeycloakContainerPort'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      # Name: !Ref 'BackEndServiceName'
+      Port: !Ref 'BackEndContainerPort'
       Protocol: HTTP
-      UnhealthyThresholdCount: 3
+      UnhealthyThresholdCount: 2
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
 
-  KeycloakPublicLoadBalancerListener:
+  BackEndPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: PublicLoadBalancer
+    DependsOn: PLMPublicLoadBalancer
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref 'KeycloakTargetGroup'
+        - TargetGroupArn: !Ref 'BackEndTargetGroup'
           Type: 'forward'
-      LoadBalancerArn: !Ref 'PublicLoadBalancer'
-      Port: !Ref KeycloakContainerPort
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref BackEndContainerPort
       Protocol: HTTP
 
   # Create a rule on the load balancer for routing traffic to the target group
-  KeycloakLoadBalancerRule:
+  BackEndLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
-        - TargetGroupArn: !Ref 'KeycloakTargetGroup'
+        - TargetGroupArn: !Ref 'BackEndTargetGroup'
           Type: 'forward'
       Conditions:
         - Field: path-pattern
           Values: [!Ref 'Path']
-      ListenerArn: !Ref KeycloakPublicLoadBalancerListener
+      # ListenerArn:
+      #   Fn::ImportValue: !Sub ${EnvironmentName}:PublicListener
+      ListenerArn: !Ref BackEndPublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
   # Enable autoscaling for this service
-  KeycloakScalableTarget:
+  BackEndScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: KeycloakECSService
+    DependsOn: BackEndECSService
     Properties:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
-      ResourceId: !Join [ '/' , [ 'service' , !Ref 'ECSCluster' , !GetAtt 'KeycloakECSService.Name' ] ] 
+      ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'BackEndECSService.Name' ] ] 
       MinCapacity: 1
-      MaxCapacity: 1
+      MaxCapacity: 2
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
-  KeycloakTargetTrackingScalingPolicy:
+
+  # Create Target Tracking scaling policies for the BackEnd service
+  BackEndTargetTrackingScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     DependsOn: 
-      - KeycloakLoadBalancerRule
-      - KeycloakECSService
-      - KeycloakScalableTarget
+      - BackEndLoadBalancerRule
+      - BackEndECSService
+      - BackEndScalableTarget
     Properties:
-      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'KeycloakECSService.Name' ] ]
+      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'BackEndECSService.Name' ] ]
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref KeycloakScalableTarget
+      ScalingTargetId: !Ref BackEndScalableTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 100.00
-        ScaleInCooldown: 300
-        ScaleOutCooldown: 120
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 60
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageMemoryUtilization
 
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: !Ref ECRRepositoryName
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-            {
-                "rules": [
-                    {
-                        "rulePriority": 1,
-                        "description": "Keep 'untagged' images ONLY for 1 Day",
-                        "selection": {
-                            "tagStatus": "untagged",
-                            "countType": "sinceImagePushed",
-                            "countUnit": "days",
-                            "countNumber": 1
-                        },
-                        "action": {
-                            "type": "expire"
-                        }
-                    },
-                    {
-                        "rulePriority": 2,
-                        "description": "At MAX only keep 4 images",
-                        "selection": {
-                            "tagStatus": "any",
-                            "countType": "imageCountMoreThan",
-                            "countNumber": 4
-                        },
-                        "action": {
-                            "type": "expire"
-                        }
-                    }
-                ]
-            }
-  FrontendECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: !Ref FrontendECRRepositoryName
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-            {
-                "rules": [
-                    {
-                        "rulePriority": 1,
-                        "description": "Keep 'untagged' images ONLY for 1 Day",
-                        "selection": {
-                            "tagStatus": "untagged",
-                            "countType": "sinceImagePushed",
-                            "countUnit": "days",
-                            "countNumber": 1
-                        },
-                        "action": {
-                            "type": "expire"
-                        }
-                    },
-                    {
-                        "rulePriority": 2,
-                        "description": "At MAX only keep 4 images",
-                        "selection": {
-                            "tagStatus": "any",
-                            "countType": "imageCountMoreThan",
-                            "countNumber": 4
-                        },
-                        "action": {
-                            "type": "expire"
-                        }
-                    }
-                ]
-            }
 
 # These are the values output by the CloudFormation template. Be careful about changing any of them, because of them are exported with specific names so that the other task related CF templates can use them.
 Outputs:
-  ECSCluster:
+  PLMEcsCluster:
     Description: The name of the ECS cluster
-    Value: !Ref 'ECSCluster'
+    Value: !Ref 'PLMEcsCluster'
     Export:
-      Name: !Sub ${EnvironmentName}:ECSCluster
-  ECSService:
-    Description: The name of the ECS cluster
-    Value: !Ref 'ECSService'
-    Export:
-      Name: !Sub ${EnvironmentName}:ECSService
-  # PublicLoadBalancer
-  PublicLoadBalancer:
-    Description: The ARN of the PublicLoadBalancer
-    Value: !Ref 'PublicLoadBalancer'
-    Export:
-      Name: !Sub ${EnvironmentName}:PublicLoadBalancer
-  PublicLoadBalancerName:
-    Description: The ARN of the PublicLoadBalancer
-    Value: !GetAtt 'PublicLoadBalancer.LoadBalancerName'
-    Export:
-      Name: !Sub ${EnvironmentName}:PublicLoadBalancerName
+      Name: !Sub ${EnvironmentName}:PLMEcsCluster
 
-  # 
-  ECSTaskExecutionRole:
+  # FrontEnd
+  FrontEndECSTaskExecutionRole:
     Description: The ARN of the ECS role
-    Value: !GetAtt 'ECSTaskExecutionRole.Arn'
+    Value: !GetAtt 'FrontEndECSTaskExecutionRole.Arn'
     Export:
-      Name: !Sub ${EnvironmentName}:ECSTaskExecutionRole
-  ContainerSecurityGroup:
+      Name: !Sub ${EnvironmentName}:FrontEndECSTaskExecutionRole
+  FrontEndContainerSecurityGroup:
     Description: A security group used to allow Fargate containers to receive traffic
-    Value: !Ref 'ContainerSecurityGroup'
+    Value: !Ref 'FrontEndContainerSecurityGroup'
     Export:
-      Name: !Sub ${EnvironmentName}:ContainerSecurityGroup
-  PublicLoadBalancerListener:
+      Name: !Sub ${EnvironmentName}:FrontEndContainerSecurityGroup
+  FrontEndPublicLoadBalancerListener:
     Description: The ARN of the public load balancer's Listener
-    Value: !Ref PublicLoadBalancerListener
+    Value: !Ref FrontEndPublicLoadBalancerListener
     Export:
-      Name: !Sub ${EnvironmentName}:PublicLoadBalancerListener
-  ExternalUrl:
+      Name: !Sub ${EnvironmentName}:FrontEndPublicLoadBalancerListener
+  FrontEndExternalUrl:
     Description: The url of the external load balancer
-    Value: !Sub http://${PublicLoadBalancer.DNSName}:${ContainerPort}
+    # Value: !Sub http://${PublicLoadBalancer.DNSName}
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndContainerPort}/currentFrontEnd
     Export:
-      Name: !Sub ${EnvironmentName}:ExternalUrl
-  PublicLoadBalancerRecordSet:
-    Description: ' PublicLoadBalancer RecordSet'
-    Value: !Ref PublicLoadBalancerRecordSet
-    Export:
-      Name: !Sub '${EnvironmentName}:PublicLoadBalancerRecordSet'
+      Name: !Sub ${EnvironmentName}:FrontEndExternalUrl
 
-  # Keycloak
-  KeycloakECSTaskExecutionRole:
+  # BackEnd
+  BackEndECSTaskExecutionRole:
     Description: The ARN of the ECS role
-    Value: !GetAtt 'KeycloakECSTaskExecutionRole.Arn'
+    Value: !GetAtt 'BackEndECSTaskExecutionRole.Arn'
     Export:
-      Name: !Sub ${EnvironmentName}:KeycloakECSTaskExecutionRole
-  KeycloakContainerSecurityGroup:
+      Name: !Sub ${EnvironmentName}:BackEndECSTaskExecutionRole
+  BackEndContainerSecurityGroup:
     Description: A security group used to allow Fargate containers to receive traffic
-    Value: !Ref 'KeycloakContainerSecurityGroup'
+    Value: !Ref 'BackEndContainerSecurityGroup'
     Export:
-      Name: !Sub ${EnvironmentName}:KeycloakContainerSecurityGroup
-  KeycloakPublicLoadBalancerListener:
+      Name: !Sub ${EnvironmentName}:BackEndContainerSecurityGroup
+  BackEndPublicLoadBalancerListener:
     Description: The ARN of the public load balancer's Listener
-    Value: !Ref KeycloakPublicLoadBalancerListener
+    Value: !Ref BackEndPublicLoadBalancerListener
     Export:
-      Name: !Sub ${EnvironmentName}:KeycloakPublicLoadBalancerListener
-  KeycloakExternalUrl:
+      Name: !Sub ${EnvironmentName}:BackEndPublicLoadBalancerListener
+  BackEndExternalUrl:
     Description: The url of the external load balancer
-    Value: !Sub http://${PublicLoadBalancer.DNSName}:${KeycloakContainerPort}
+    # Value: !Sub http://${PublicLoadBalancer.DNSName}
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndContainerPort}/BackEnd
     Export:
-      Name: !Sub ${EnvironmentName}:KeycloakExternalUrl
-  DomainKeycloakPrivateServiceDiscoveryNamespace:
+      Name: !Sub ${EnvironmentName}:BackEndExternalUrl
+  BackEndPrivateServiceDiscoveryNamespace:
     Description: The ID of the private service discovery namespace
-    Value: !Ref DomainKeycloakPrivateServiceDiscoveryNamespace
+    Value: !Ref BackEndPrivateServiceDiscoveryNamespace
     Export:
-      Name: !Sub ${EnvironmentName}:DomainKeycloakPrivateServiceDiscoveryNamespace
-
-
-  ECRRepository:
-    Description: The name of the  ECR Repository
-    Value: !Ref ECRRepository
+      Name: !Sub ${EnvironmentName}:BackEndPrivateServiceDiscoveryNamespace
+  
+  # FrontEndBackEnd
+  FrontEndBackEndExternalUrl:
+    Description: The url of the external load balancer
+    # Value: !Sub http://${PublicLoadBalancer.DNSName}
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndContainerPort}/currentFrontEnd/BackEnd
     Export:
-      Name: !Sub ${EnvironmentName}:ECRRepository
+      Name: !Sub ${EnvironmentName}:FrontEndBackEndExternalUrl
