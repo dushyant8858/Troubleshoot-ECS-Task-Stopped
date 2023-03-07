@@ -8,8 +8,8 @@ COMMIT_HASH=$(git rev-parse --short=6 HEAD)
 
 
 echo ******** Building form ARCH=arm64v8 ********
-# docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 --build-arg ARCH=arm64v8 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=80 --no-cache .
-docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 --build-arg ARCH=arm64v8 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=80 .
+# docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 --build-arg ARCH=arm64v8 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=8080 --no-cache .
+docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 --build-arg ARCH=arm64v8 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=8080 .
 docker tag $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 $DOCKER_PRIVATE_REPOSITORY_NAME:latest-arm64v8
 docker tag $LOCAL_PRIVATE_REPOSITORY_NAME:latest-arm64v8 $DOCKER_PRIVATE_REPOSITORY_NAME:$COMMIT_HASH-arm64v8
 
@@ -19,8 +19,8 @@ docker push $DOCKER_PRIVATE_REPOSITORY_NAME:$COMMIT_HASH-arm64v8
 echo ***PRIVATE*** Build completed on `date`...
 
 echo ******** Building form ARCH=amd64 ********
-# docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 --build-arg ARCH=amd64 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=80 --no-cache .
-docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 --build-arg ARCH=amd64 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=80 .
+# docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 --build-arg ARCH=amd64 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=8080 --no-cache .
+docker build -t $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 --build-arg ARCH=amd64 --build-arg server_port=80 --build-arg rest_hostname=backendgreeting.backendgreeting --build-arg rest_port=8080 .
 docker tag $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 $DOCKER_PRIVATE_REPOSITORY_NAME:latest-amd64
 docker tag $LOCAL_PRIVATE_REPOSITORY_NAME:latest-amd64 $DOCKER_PRIVATE_REPOSITORY_NAME:$COMMIT_HASH-amd64
 
