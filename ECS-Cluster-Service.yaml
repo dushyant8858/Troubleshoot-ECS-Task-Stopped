@@ -4,7 +4,7 @@
 # aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEndDateTime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
 # aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEndDateTime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
 
-# while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
+# while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 
 # aws cloudformation delete-stack --region us-west-2 --stack-name PLM-ECS
 
@@ -26,7 +26,7 @@ Parameters:
     Description: PLM FrontEndDateTime service
   FrontEndDateTimeImageUrl:
     Type: String
-    Default: nginx:latest
+    Default: httpd:latest
     Description: The url of a docker image that contains the FrontEndDateTime application process that will handle the traffic for this service
   FrontEndDateTimeECRRepositoryName:
     Type: String
@@ -34,7 +34,7 @@ Parameters:
     Description: ECR repository Name that you need to create for FrontEndDateTime images 
   FrontEndDateTimeContainerPort:
     Type: Number
-    Default: 80
+    Default: '80'
     # Default: '8083'
     Description: What port number the application inside the docker container is binding to
   FrontEndDateTimeContainerCpu:
@@ -49,7 +49,7 @@ Parameters:
     Description: How much memory in megabytes to give the 
   FrontEndDateTimeDesiredCount:
     Type: Number
-    Default: 0
+    Default: 1
     Description: How many copies of the service task to run
 
 # BackEndGreeting = BackEndGreeting
@@ -60,7 +60,7 @@ Parameters:
     Description: PLM BackEndGreeting service
   BackEndGreetingImageUrl:
     Type: String
-    Default: httpd:latest
+    Default: nginx:latest
     Description: The url of a docker image that contains the  application process that will handle the traffic for this service
   BackEndGreetingECRRepositoryName:
     Type: String
@@ -68,8 +68,8 @@ Parameters:
     Description: ECR repository Name that you need to create for  images 
   BackEndGreetingContainerPort:
     Type: Number
-    Default: '8084'
-    # Default: '80'
+    Default: '8080'
+    # Default: '8084'
     Description: What port number the application inside the docker container is binding to
   BackEndGreetingContainerCpu:
     Type: Number
@@ -83,7 +83,7 @@ Parameters:
     Description: How much memory in megabytes to give the 
   BackEndGreetingDesiredCount:
     Type: Number
-    Default: 0
+    Default: 1
     Description: How many copies of the service task to run
 
 # ALB Parameters 
@@ -111,7 +111,7 @@ Parameters:
   PLMPublicLoadBalancerSubDomainNameWithDot:
     Description: 'Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires ParentZoneStack parameter!'
     Type: String
-    Default: '.'
+    Default: 'PLM.'
 
 # DomainBackEndGreetingPrivateServiceDiscoveryNamespace
   DomainBackEndGreetingPrivateServiceDiscoveryNamespace:
@@ -129,18 +129,18 @@ Parameters:
     Description: Type of EC2 instance to use
     Type: String
     AllowedValues:
-      - t2.micro
+      - c5.large
     ConstraintDescription: Must be a size from t2 instance families
-    Default: t2.micro
+    Default: c5.large
 
 Mappings:
   InstanceArchMap:
-    t2.micro:
+    c5.large:
       Arch: X8664
   RegionAmiMap:
     us-west-2:
       # aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-west-2 --query Parameters[].Value --output text
-      X8664: ami-0a4cbf3bd47ef1bc9
+      X8664: ami-0ae546d2dd33d2039
 
 
 Conditions:
@@ -383,13 +383,13 @@ Resources:
       VPCZoneIdentifier:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
-      MinSize: '3'
+      MinSize: '2'
       MaxSize: '4'
-      DesiredCapacity: '3'
+      DesiredCapacity: '2'
       # NewInstancesProtectedFromScaleIn: true
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '3'
+        MinInstancesInService: '2'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -453,23 +453,6 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Policies:
-        - PolicyName: FrontEndDateTimeECSTaskExecutionRolePolicy
-          PolicyDocument:
-            Statement:
-            - Effect: Allow
-              Action:
-                # Allow the ECS Tasks to download images from ECR
-                - 'ecr:GetAuthorizationToken'
-                - 'ecr:BatchCheckLayerAvailability'
-                - 'ecr:GetDownloadUrlForLayer'
-                - 'ecr:BatchGetImage'
-
-                # Allow the ECS tasks to upload logs to CloudWatch
-                - 'logs:CreateLogStream'
-                - 'logs:PutLogEvents'
-              Resource: '*'
   FrontEndDateTimeECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -482,21 +465,6 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
-      # Policies:
-      #   - PolicyName: FrontEndDateTimeECSTaskRolePolicy
-      #     PolicyDocument:
-      #       Statement:
-      #       - Effect: Allow
-      #         Action:
-      #           # Allow the ECS Tasks to only Read from S3
-      #           - 's3:Get*'
-      #           - 's3:List*'
-      #           # Allow the ECS tasks to get Secrets from SSM
-      #           - 'ssm:Describe*'
-      #           - 'ssm:Get*'
-      #           - 'ssm:List*'
-      #         Resource: '*'
 
   # A log group for storing the stdout logs from this service's containers
   FrontEndDateTimeLogGroup:
@@ -540,11 +508,12 @@ Resources:
     DependsOn: 
       - BackEndGreetingECSService
       - FrontEndDateTimeLoadBalancerRule
+      - PLMEcsASG
     Properties:
       # ServiceName: !Ref 'FrontEndDateTimeServiceName'
       Cluster: !Ref PLMEcsCluster
-      LaunchType: FARGATE
-      PlatformVersion: 1.4.0
+      LaunchType: EC2
+      # PlatformVersion: 1.4.0
       HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
         MaximumPercent: '200'
@@ -569,7 +538,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /currentFrontEndDateTime
+      # HealthCheckPath: /currentFrontEndDateTime
+      HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
@@ -677,24 +647,6 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Policies:
-        - PolicyName: BackEndGreetingAmazonECSTaskExecutionRolePolicy
-          PolicyDocument:
-            Statement:
-            - Effect: Allow
-              Action:
-                # Allow the ECS Tasks to download images from ECR
-                - 'ecr:GetAuthorizationToken'
-                - 'ecr:BatchCheckLayerAvailability'
-                - 'ecr:GetDownloadUrlForLayer'
-                - 'ecr:BatchGetImage'
-
-                # Allow the ECS tasks to upload logs to CloudWatch
-                - 'logs:CreateLogStream'
-                - 'logs:PutLogEvents'
-              Resource: '*'
-
   BackEndGreetingECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -707,22 +659,6 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        # - arn:aws:iam::aws:policy/AmazonS3FullAccess
-      # Policies:
-      #   - PolicyName: FrontEndDateTimeECSTaskRolePolicy
-      #     PolicyDocument:
-      #       Statement:
-      #       - Effect: Allow
-      #         Action:
-      #           # Allow the ECS Tasks to only Read from S3
-      #           - 's3:Get*'
-      #           - 's3:List*'
-      #           # Allow the ECS tasks to get Secrets from SSM
-      #           - 'ssm:Describe*'
-      #           - 'ssm:Get*'
-      #           - 'ssm:List*'
-      #         Resource: '*'
-
 
   # A log group for storing the stdout logs from this service's containers
   BackEndGreetingLogGroup:
@@ -747,10 +683,13 @@ Resources:
         - Name: !Ref 'BackEndGreetingServiceName'
           Cpu: !Ref 'BackEndGreetingContainerCpu'
           Memory: !Ref 'BackEndGreetingContainerMemory'
-          # Image: !Ref 'BackEndGreetingImageUrl'
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackEndGreetingECRRepositoryName}:latest
+          Image: !Ref 'BackEndGreetingImageUrl'
+          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackEndGreetingECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'BackEndGreetingContainerPort'
+          Environment: 
+            - Name: NGINX_PORT
+              Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -761,14 +700,16 @@ Resources:
   # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
   BackEndGreetingECSService:
     Type: AWS::ECS::Service
-    DependsOn: BackEndGreetingLoadBalancerRule
+    DependsOn: 
+      - BackEndGreetingLoadBalancerRule
+      - PLMEcsASG
     Properties:
       # ServiceName: !Ref 'BackEndGreetingServiceName'
       # Cluster:
       #   Fn::ImportValue: !Sub ${EnvironmentName}:PLMEcsCluster
       Cluster: !Ref PLMEcsCluster
-      LaunchType: FARGATE
-      PlatformVersion: 1.4.0
+      LaunchType: EC2
+      # PlatformVersion: 1.4.0
       HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
         MaximumPercent: '200'
@@ -808,7 +749,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /BackEndGreeting
+      # HealthCheckPath: /BackEndGreeting
+      HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
