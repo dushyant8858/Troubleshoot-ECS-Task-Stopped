@@ -499,6 +499,14 @@ Resources:
             - ContainerPort: !Ref 'FrontEndDateTimeContainerPort'
               Protocol: tcp
               HostPort: !Ref 'FrontEndDateTimeContainerPort'
+          Environment: 
+            - Name: SERVER_PORT
+              Value: !Ref 'FrontEndDateTimeContainerPort'
+            - Name: REST_HOSTNAME
+              # backendgreeting.backendgreeting
+              Value: !Sub ${BackEndGreetingServiceName}.{BackEndGreetingPrivateServiceDiscoveryNamespace}
+            - Name: REST_PORT
+              Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -700,10 +708,12 @@ Resources:
           #   - --port=2001
           #   - --name=iamfoo
           Environment: 
-            - Name: WHOAMI_PORT_NUMBER
+            # - Name: WHOAMI_PORT_NUMBER
+            #   Value: !Ref 'BackEndGreetingContainerPort'
+            # - Name: WHOAMI_NAME
+            #   Value: !Ref 'BackEndGreetingServiceName'
+            - Name: SERVER_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
-            - Name: WHOAMI_NAME
-              Value: !Ref 'BackEndGreetingServiceName'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
