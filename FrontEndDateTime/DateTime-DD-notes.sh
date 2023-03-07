@@ -1,28 +1,30 @@
 # ---------- DD Local ---------- #
 
-docker build -t datetime:local --build-arg server_port=8083 --build-arg rest_hostname=$(docker inspect greeting --format '{{.NetworkSettings.IPAddress}}') --build-arg rest_port=8084 --no-cache .
+# docker build -t frontenddatetime:local --build-arg server_port=80 --build-arg rest_hostname=$(docker inspect backendgreeting --format '{{.NetworkSettings.IPAddress}}') --build-arg rest_port=8080 --no-cache .
 
-docker build -t datetime:local --build-arg server_port=8083 --build-arg rest_hostname=$(docker inspect greeting --format '{{.NetworkSettings.IPAddress}}') --build-arg rest_port=8084 .
-docker stop datetime && docker rm datetime 
-docker run -d -p 8083:8083 --name datetime datetime:local
+docker build -t frontenddatetime:local --build-arg server_port=80 --build-arg rest_hostname=$(docker inspect backendgreeting --format '{{.NetworkSettings.IPAddress}}') --build-arg rest_port=8080 .
+docker stop frontenddatetime && docker rm frontenddatetime 
+sleep 5
+docker run -d -p 80:80 --name frontenddatetime frontenddatetime:local
 
+sleep 5
 
-curl http://localhost:8083/currentdatetime
-curl http://localhost:8083/currentdatetime/greeting
-
-
-docker logs -f datetime
-docker exec -it datetime sh 
-apk add curl 
+curl -s http://localhost:80/frontenddatetime | jq .
+curl -s http://localhost:80/frontenddatetime/backendgreeting | jq . 
 
 
-docker system df
-docker system prune --all
+# docker logs -f frontenddatetime
+# docker exec -it frontenddatetime sh 
+# apk add curl 
 
 
-git add .
-git commit -m "Added withSDcfn."
-git push
+# docker system df
+# docker system prune --all
+
+
+# git add .
+# git commit -m "Added withSDcfn."
+# git push
 
 # ---------- DD Local ---------- #
 

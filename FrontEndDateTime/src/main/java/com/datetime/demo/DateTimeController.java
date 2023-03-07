@@ -11,13 +11,13 @@ public class DateTimeController {
     private RestRetriever restRetriever;
 
 //    These paths are case-sensitive it appears
-    @RequestMapping(value = "/currentdatetime", method = RequestMethod.GET)
+    @RequestMapping(value = "/frontenddatetime", method = RequestMethod.GET)
     public String currentDate() {
         return java.time.LocalDateTime.now().toString();
     }
 
-    @RequestMapping(value = "/currentdatetime/greeting", method = RequestMethod.GET)
-    public Greeting currentDateGreeting(@RequestParam(value = "name", defaultValue = "World") String name) {
+    @RequestMapping(value = "/frontenddatetime/backendgreeting", method = RequestMethod.GET)
+    public Greeting currentDateGreeting(@RequestParam(value = "name", defaultValue = "from BackEnd Greeting !!") String name) {
         return restRetriever.getGreeting(name);
     }
 

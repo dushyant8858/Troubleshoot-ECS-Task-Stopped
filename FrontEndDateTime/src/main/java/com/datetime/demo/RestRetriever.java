@@ -21,7 +21,7 @@ public class RestRetriever {
         System.out.println("some.prop injected: " + prop);
         System.out.println("REST address: " + restHostname + ":" + restPort);
 
-        final String uri = String.format("http://" + restHostname + ":" + restPort + "/greeting?name=%s", name);
+        final String uri = String.format("http://" + restHostname + ":" + restPort + "/backendgreeting?name=%s", name);
 
         RestTemplate restTemplate = new RestTemplate();
         Greeting greeting = restTemplate.getForObject(uri, Greeting.class);

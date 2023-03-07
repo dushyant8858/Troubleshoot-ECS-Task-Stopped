@@ -18,8 +18,8 @@ public class GreetingController {
         // log.info("heapFreeSize: {}",heapFreeSize);
 
 //    These paths are case-sensitive it appears
-    @GetMapping("/greeting")
-    public Greeting greeting(@RequestParam(value = "name", defaultValue = "World") String name) {
+    @GetMapping("/backendgreeting")
+    public Greeting greeting(@RequestParam(value = "name", defaultValue = "from BackEnd Greeting") String name) {
 
         // https://www.veracode.com/blog/secure-development/docker-and-javaopts 
         // long heapSize = Runtime.getRuntime().totalMemory();
