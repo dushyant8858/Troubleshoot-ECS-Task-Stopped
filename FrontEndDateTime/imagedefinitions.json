@@ -1,0 +1,6 @@
+[
+    {
+      "name": "DateTime",
+      "imageUri": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DateTimeECRRepository}:latest"
+    }
+  ]
