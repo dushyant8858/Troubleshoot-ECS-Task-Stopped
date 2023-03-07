@@ -1,8 +1,8 @@
 # aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 # aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 
-# aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEndDateTime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
-# aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/FrontEndDateTime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
+# aws cloudformation create-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/frontenddatetime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file:///Users/dubaria/Desktop/Exercises/ECS/Troubleshoot-ECS-Task-Stopped/ECS-Cluster-Service.yaml --parameters ParameterKey=HostedZoneId,ParameterValue=Z38JIISUVMYB2F ParameterKey=HostedZoneName,ParameterValue=dubaria.myinstance.com ParameterKey=ImageUrl,ParameterValue=dushyant8858/frontenddatetime:local ParameterKey=ContainerPort,ParameterValue=8084 ParameterKey=BackEndGreetingImageUrl,ParameterValue=dushyant8858/nodejs-hello-world:DD ParameterKey=KeyPair,ParameterValue=us-west-2 --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-ECS --stack-name PLM-ECS
 
 # while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 
@@ -385,13 +385,13 @@ Resources:
       VPCZoneIdentifier:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
-      MinSize: '2'
+      MinSize: '1'
       MaxSize: '4'
-      DesiredCapacity: '2'
+      DesiredCapacity: '1'
       # NewInstancesProtectedFromScaleIn: true
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '2'
+        MinInstancesInService: '1'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -542,7 +542,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /frontenddatetime/backendgreeting
+      # HealthCheckPath: /frontenddatetime/backendgreeting
+      HealthCheckPath: /frontenddatetime
       # HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
@@ -762,7 +763,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /BackEndGreeting
+      HealthCheckPath: /backendgreeting
       # HealthCheckPath: /health
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
@@ -862,8 +863,8 @@ Outputs:
   FrontEndDateTimeExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/FrontEndDateTime
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/FrontEndDateTime
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
@@ -886,8 +887,8 @@ Outputs:
   BackEndGreetingExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/BackEndGreeting
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/BackEndGreeting
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/backendgreeting
     Export:
       Name: !Sub ${EnvironmentName}:BackEndGreetingExternalUrl
   BackEndGreetingPrivateServiceDiscoveryNamespace:
@@ -900,7 +901,7 @@ Outputs:
   FrontEndDateTimeBackEndGreetingExternalUrl:
     Description: The url of the external load balancer
     # Value: !Sub http://${PublicLoadBalancer.DNSName}
-    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/FrontEndDateTime/BackEndGreeting
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/FrontEndDateTime/BackEndGreeting
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeBackEndGreetingExternalUrl
