@@ -60,7 +60,7 @@ Parameters:
     Description: PLM BackEndGreeting service
   BackEndGreetingImageUrl:
     Type: String
-    Default: nginx:latest
+    Default: traefik/whoami:latest
     Description: The url of a docker image that contains the  application process that will handle the traffic for this service
   BackEndGreetingECRRepositoryName:
     Type: String
@@ -381,7 +381,7 @@ Resources:
           - PLMEcsLaunchTemplate
           - LatestVersionNumber
       VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       MinSize: '2'
       MaxSize: '4'
@@ -495,6 +495,8 @@ Resources:
           # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndDateTimeECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'FrontEndDateTimeContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'FrontEndDateTimeContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -677,6 +679,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
+        - EC2
       TaskRoleArn: !GetAtt 'BackEndGreetingECSTaskRole.Arn'
       ExecutionRoleArn: !GetAtt 'BackEndGreetingECSTaskExecutionRole.Arn'
       ContainerDefinitions:
@@ -687,9 +690,17 @@ Resources:
           # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackEndGreetingECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'BackEndGreetingContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'BackEndGreetingContainerPort'
+          # Command: 
+          #   # It tells whoami to start listening on 2001 instead of 80
+          #   - --port=2001
+          #   - --name=iamfoo
           Environment: 
-            - Name: NGINX_PORT
+            - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'BackEndGreetingContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'BackEndGreetingServiceName'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -750,7 +761,7 @@ Resources:
     Properties:
       HealthCheckIntervalSeconds: 15
       # HealthCheckPath: /BackEndGreeting
-      HealthCheckPath: /
+      HealthCheckPath: /health
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
