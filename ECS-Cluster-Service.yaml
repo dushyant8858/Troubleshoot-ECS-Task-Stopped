@@ -333,10 +333,10 @@ Resources:
             - Arch
         KeyName: !Ref KeyPair
         SecurityGroupIds:
-          - !Ref ContainerSecurityGroup
+          # - !Ref ContainerSecurityGroup
           - !Ref FrontEndContainerSecurityGroup
           - !Ref BackEndContainerSecurityGroup
-          - !Ref NishitDushyantPLMEcsInstanceSecurityGroup
+          # - !Ref NishitDushyantPLMEcsInstanceSecurityGroup
         IamInstanceProfile: 
           Name: !Ref ECSInstanceProfileRole
         UserData: !Base64 
@@ -432,12 +432,12 @@ Resources:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
           # Allow access ONLY from ALB 
-          - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
             # IpProtocol: -1
             IpProtocol: tcp
             FromPort: !Ref FrontEndContainerPort
             ToPort: !Ref FrontEndContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PublicLoadBalancer.LoadBalancerName} on Port:${FrontEndContainerPort}
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndContainerPort}
 
   # This is a role which is used by the ECS tasks themselves.
   FrontEndECSTaskExecutionRole:
@@ -522,7 +522,7 @@ Resources:
           Cpu: !Ref 'FrontEndContainerCpu'
           Memory: !Ref 'FrontEndContainerMemory'
           # Image: !Ref 'FrontEndImageUrl'
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndECRRepository}:latest
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'FrontEndContainerPort'
           LogConfiguration:
@@ -589,7 +589,7 @@ Resources:
       DefaultActions:
         - TargetGroupArn: !Ref 'FrontEndTargetGroup'
           Type: 'forward'
-      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
       Port: !Ref FrontEndContainerPort
       Protocol: HTTP
 
@@ -648,7 +648,7 @@ Resources:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
           # Allow access ONLY from ALB from anywhere on the internet
-          - SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
             # IpProtocol: -1
             IpProtocol: tcp
             FromPort: !Ref BackEndContainerPort
