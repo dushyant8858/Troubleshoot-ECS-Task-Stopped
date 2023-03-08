@@ -22,91 +22,72 @@ Parameters:
   ContainerCpu:
     Type: Number
     Default: 256
-    Description: How much CPU to give the container. 1024 is 1 CPU
   ContainerMemory:
     Type: Number
     Default: 512
-    Description: How much memory in megabytes to give the 
+  PLM1ImageUrl:
+    Type: String
+    Default: dushyant8858/traefik-whoami:latest
+  ECSTaskDesiredCount:
+    Type: Number
+    Default: 1
 
 # PLM1TaskStoppedByUser resources
   PLM1TaskStoppedByUserServiceName:
     Type: String
     Default: PLM1TaskStoppedByUser
-    Description: PLM PLM1TaskStoppedByUser service
-  PLM1TaskStoppedByUserImageUrl:
-    Type: String
-    Default: dushyant8858/traefik-whoami:latest
-    Description: The url of a docker image that contains the PLM1TaskStoppedByUser application process that will handle the traffic for this service
   PLM1TaskStoppedByUserContainerPort:
     Type: Number
     Default: '8001'
     Description: What port number the application inside the docker container is binding to
-  PLM1TaskStoppedByUserDesiredCount:
-    Type: Number
-    Default: 1
-    Description: How many copies of the service task to run
-
+    
 # PLM2ServiceScalingEventTriggered service Parameters
   PLM2ServiceScalingEventTriggeredServiceName:
     Type: String
     Default: PLM2ServiceScalingEventTriggered
-    Description: PLM PLM2ServiceScalingEventTriggered service
-  PLM2ServiceScalingEventTriggeredImageUrl:
-    Type: String
-    Default: dushyant8858/traefik-whoami:latest
-    Description: The url of a docker image that contains the PLM2ServiceScalingEventTriggered application process that will handle the traffic for this service
   PLM2ServiceScalingEventTriggeredContainerPort:
     Type: Number
     Default: '8002'
     Description: What port number the application inside the docker container is binding to
   PLM2ServiceScalingEventTriggeredDesiredCount:
     Type: Number
-    Default: 5
-    Description: How many copies of the service task to run
+    Default: 1
 
-
+# PLM3UnhealthyContainerInstance service Parameters
+  PLM3UnhealthyContainerInstanceServiceName:
+    Type: String
+    Default: PLM3UnhealthyContainerInstance
+  PLM3UnhealthyContainerInstanceContainerPort:
+    Type: Number
+    Default: '8003'
 
 # FrontEndDateTime = DateTim
 # FrontEndDateTime Service Parameters 
   FrontEndDateTimeServiceName:
     Type: String
     Default: FrontEndDateTime
-    Description: PLM FrontEndDateTime service
   FrontEndDateTimeImageUrl:
     Type: String
     # Default: httpd:latest
     Default: dushyant8858/frontenddatetime:latest
-    Description: The url of a docker image that contains the FrontEndDateTime application process that will handle the traffic for this service
   FrontEndDateTimeContainerPort:
     Type: Number
     Default: '80'
     # Default: '8083'
-    Description: What port number the application inside the docker container is binding to
-  FrontEndDateTimeDesiredCount:
-    Type: Number
-    Default: 1
-    Description: How many copies of the service task to run
 
 # BackEndGreeting = BackEndGreeting
 # BackEndGreeting Service Parameters 
   BackEndGreetingServiceName:
     Type: String
     Default: BackEndGreeting
-    Description: PLM BackEndGreeting service
   BackEndGreetingImageUrl:
     Type: String
     # Default: traefik/whoami:latest
     Default: dushyant8858/backendgreeting:latest
-    Description: The url of a docker image that contains the  application process that will handle the traffic for this service
   BackEndGreetingContainerPort:
     Type: Number
     Default: '8080'
     # Default: '8084'
-    Description: What port number the application inside the docker container is binding to
-  BackEndGreetingDesiredCount:
-    Type: Number
-    Default: 1
-    Description: How many copies of the service task to run
 
 # ALB Parameters 
   Path:
@@ -117,10 +98,6 @@ Parameters:
     Type: Number
     Default: 1
     Description: The priority for the routing rule added to the load balancer. This only applies if your have multiple services which have been assigned to different paths on the load balancer.
-  Role:
-    Type: String
-    Default: ""
-    Description: (Optional) An IAM role to give the service's containers if the code within needs to access other AWS resources like S3 buckets, DynamoDB tables, etc
 
   HostedZoneId:
     Description: HostedZone ID
@@ -135,18 +112,12 @@ Parameters:
     Type: String
     Default: 'PLM.'
 
-# DomainBackEndGreetingPrivateServiceDiscoveryNamespace
   DomainBackEndGreetingPrivateServiceDiscoveryNamespace:
     Type: String
     Default: BackEndGreeting
     Description: The name of the namespace. Services are prepended, for example user.service.production
 
 # ASG / AutoScaling Parameters
-  # KeyPair:
-  #   Description: Name of key pair to use for SSH access to the instances
-  #   Type: 'AWS::EC2::KeyPair::KeyName'
-  #   ConstraintDescription: Key pair must already exist in the region of the stack creation
-  #   Default: dd-us-west-2
   InstanceType:
     Description: Type of EC2 instance to use
     Type: String
@@ -164,10 +135,6 @@ Mappings:
       # aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-west-2 --query Parameters[].Value --output text
       X8664: ami-0ae546d2dd33d2039
 
-
-Conditions:
-  HasCustomRole: !Not [ !Equals [!Ref 'Role', ''] ]
-
 Resources:
 # ECS Resources
   PLMEcsCluster:
@@ -183,21 +150,10 @@ Resources:
       SecurityGroupIngress:
           - CidrIp: 0.0.0.0/0
             IpProtocol: tcp
-            FromPort: 8001
-            ToPort: 8020
-            Description: Allow access to ALB from anywhere on the internet to BackEndGreeting ECS Service
-          # Allow access to ALB from anywhere on the internet to FrontEndDateTime ECS Service 
-          - CidrIp: 0.0.0.0/0
-            IpProtocol: tcp
-            FromPort: !Ref FrontEndDateTimeContainerPort
-            ToPort: !Ref FrontEndDateTimeContainerPort
-            Description: Allow access to ALB from anywhere on the internet to FrontEndDateTime ECS Service
-          # Allow access to ALB from anywhere on the internet to BackEndGreeting ECS Service
-          - CidrIp: 0.0.0.0/0
-            IpProtocol: tcp
-            FromPort: !Ref BackEndGreetingContainerPort
-            ToPort: !Ref BackEndGreetingContainerPort
-            Description: Allow access to ALB from anywhere on the internet to BackEndGreeting ECS Service
+            FromPort: 80
+            # FromPort: 8001
+            ToPort: 9999
+            Description: Allow access to ALB from ALL IP on port 80-9999
 
   PLMPublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -207,7 +163,6 @@ Resources:
         - Key: idle_timeout.timeout_seconds
           Value: '30'
       Subnets:
-        # The load balancer is placed into the public subnets, so that traffic from the internet can reach the load balancer directly via the internet gateway
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       SecurityGroups: [!Ref 'PLMPublicLoadBalancerSG']
@@ -357,9 +312,7 @@ Resources:
             - InstanceArchMap
             - !Ref InstanceType
             - Arch
-        # KeyName: !Ref KeyPair
         SecurityGroupIds:
-          # - !Ref ContainerSecurityGroup
           - !Ref FrontEndDateTimeContainerSecurityGroup
           - !Ref BackEndGreetingContainerSecurityGroup
         IamInstanceProfile: 
@@ -452,6 +405,15 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
+####################
+# AWS CloudWatch LogGroup resources
+####################
+  PLMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${EnvironmentName}-LogGroup
+      RetentionInDays: 7
+
 
 ####################
 # PLM1TaskStoppedByUser resources
@@ -471,15 +433,6 @@ Resources:
             ToPort: !Ref PLM1TaskStoppedByUserContainerPort
             Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM1TaskStoppedByUserContainerPort}
 
-  # A log group for storing the stdout logs from this service's containers
-  PLM1TaskStoppedByUserLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${PLM1TaskStoppedByUserServiceName}
-      RetentionInDays: 7
-
-  # The task definition. This is a simple metadata description of what
-  # container to run, and what resource requirements it has.
   PLM1TaskStoppedByUserTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -496,8 +449,7 @@ Resources:
         - Name: !Ref 'PLM1TaskStoppedByUserServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLM1TaskStoppedByUserImageUrl'
-          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLM1TaskStoppedByUserECRRepositoryName}:latest
+          Image: !Ref 'PLM1ImageUrl'
           PortMappings:
             - ContainerPort: !Ref 'PLM1TaskStoppedByUserContainerPort'
               Protocol: tcp
@@ -510,10 +462,9 @@ Resources:
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${PLM1TaskStoppedByUserServiceName}
+              awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM1TaskStoppedByUserServiceName'
-  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
   PLM1TaskStoppedByUserECSService:
     Type: AWS::ECS::Service
     DependsOn: 
@@ -526,7 +477,7 @@ Resources:
       DeploymentConfiguration:
         MaximumPercent: '200'
         MinimumHealthyPercent: '100'
-      DesiredCount: !Ref PLM1TaskStoppedByUserDesiredCount
+      DesiredCount: !Ref ECSTaskDesiredCount
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -541,7 +492,6 @@ Resources:
           ContainerPort: !Ref PLM1TaskStoppedByUserContainerPort
           TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
 
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
   PLM1TaskStoppedByUserTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -571,7 +521,6 @@ Resources:
       Port: !Ref PLM1TaskStoppedByUserContainerPort
       Protocol: HTTP
 
-  # Create a rule on the load balancer for routing traffic to the target group
   PLM1TaskStoppedByUserLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -602,15 +551,6 @@ Resources:
             ToPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
             Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM2ServiceScalingEventTriggeredContainerPort}
 
-  # A log group for storing the stdout logs from this service's containers
-  PLM2ServiceScalingEventTriggeredLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${PLM2ServiceScalingEventTriggeredServiceName}
-      RetentionInDays: 7
-
-  # The task definition. This is a simple metadata description of what
-  # container to run, and what resource requirements it has.
   PLM2ServiceScalingEventTriggeredTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -627,8 +567,7 @@ Resources:
         - Name: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLM2ServiceScalingEventTriggeredImageUrl'
-          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLM2ServiceScalingEventTriggeredECRRepositoryName}:latest
+          Image: !Ref 'PLM1ImageUrl'
           PortMappings:
             - ContainerPort: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
               Protocol: tcp
@@ -641,16 +580,14 @@ Resources:
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${PLM2ServiceScalingEventTriggeredServiceName}
+              awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
-  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
   PLM2ServiceScalingEventTriggeredECSService:
     Type: AWS::ECS::Service
     DependsOn: 
       - PLMEcsASG
     Properties:
-      # ServiceName: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
       Cluster: !Ref PLMEcsCluster
       LaunchType: EC2
       HealthCheckGracePeriodSeconds: '180'
@@ -672,7 +609,6 @@ Resources:
           ContainerPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
           TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
 
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
   PLM2ServiceScalingEventTriggeredTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -702,7 +638,6 @@ Resources:
       Port: !Ref PLM2ServiceScalingEventTriggeredContainerPort
       Protocol: HTTP
 
-  # Create a rule on the load balancer for routing traffic to the target group
   PLM2ServiceScalingEventTriggeredLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -715,7 +650,6 @@ Resources:
       ListenerArn: !Ref PLM2ServiceScalingEventTriggeredPublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
-  # Enable autoscaling for this service
   PLM2ServiceScalingEventTriggeredScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PLM2ServiceScalingEventTriggeredECSService
@@ -727,7 +661,6 @@ Resources:
       MaxCapacity: 5
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
-  # Create Track scaling policies for the PLM2ServiceScalingEventTriggered service
   PLM2ServiceScalingEventTriggeredTargetTrackingScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     DependsOn: 
@@ -744,6 +677,128 @@ Resources:
         ScaleOutCooldown: 60
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageMemoryUtilization
+
+####################
+# PLM3UnhealthyContainerInstance resources
+####################
+  PLM3UnhealthyContainerInstanceContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Fargate PLM3UnhealthyContainerInstance containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+            ToPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM3UnhealthyContainerInstanceContainerPort}
+
+  PLM3UnhealthyContainerInstanceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLM1ImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM3UnhealthyContainerInstanceServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+  PLM3UnhealthyContainerInstanceECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+    Properties:
+      # ServiceName: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '180'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLM3UnhealthyContainerInstanceContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM3UnhealthyContainerInstanceTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+          ContainerPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+          TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+
+  PLM3UnhealthyContainerInstanceTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM3UnhealthyContainerInstancePublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM3UnhealthyContainerInstanceContainerPort
+      Protocol: HTTP
+
+  PLM3UnhealthyContainerInstanceLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM3UnhealthyContainerInstancePublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+
+
+
 
 
 
@@ -792,15 +847,6 @@ Resources:
             ToPort: !Ref FrontEndDateTimeContainerPort
             Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
 
-  # A log group for storing the stdout logs from this service's containers
-  FrontEndDateTimeLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${FrontEndDateTimeServiceName}
-      RetentionInDays: 7
-
-  # The task definition. This is a simple metadata description of what
-  # container to run, and what resource requirements it has.
   FrontEndDateTimeTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -818,7 +864,6 @@ Resources:
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
           Image: !Ref 'FrontEndDateTimeImageUrl'
-          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndDateTimeECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'FrontEndDateTimeContainerPort'
               Protocol: tcp
@@ -834,11 +879,10 @@ Resources:
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${FrontEndDateTimeServiceName}
+              awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'FrontEndDateTimeServiceName'
 
-  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
   FrontEndDateTimeECSService:
     Type: AWS::ECS::Service
     DependsOn: 
@@ -846,15 +890,13 @@ Resources:
       - FrontEndDateTimeLoadBalancerRule
       - PLMEcsASG
     Properties:
-      # ServiceName: !Ref 'FrontEndDateTimeServiceName'
       Cluster: !Ref PLMEcsCluster
       LaunchType: EC2
-      # PlatformVersion: 1.4.0
       HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
         MaximumPercent: '200'
         MinimumHealthyPercent: '100'
-      DesiredCount: !Ref FrontEndDateTimeDesiredCount
+      DesiredCount: !Ref ECSTaskDesiredCount
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -869,19 +911,16 @@ Resources:
           ContainerPort: !Ref FrontEndDateTimeContainerPort
           TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
 
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically distribute traffic across all the targets.
   FrontEndDateTimeTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
       # HealthCheckPath: /frontenddatetime/backendgreeting
       HealthCheckPath: /frontenddatetime
-      # HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
-      # Name: !Ref 'FrontEndDateTimeServiceName'
       Port: !Ref 'FrontEndDateTimeContainerPort'
       Protocol: HTTP
       UnhealthyThresholdCount: 2
@@ -902,7 +941,6 @@ Resources:
       Port: !Ref FrontEndDateTimeContainerPort
       Protocol: HTTP
 
-  # Create a rule on the load balancer for routing traffic to the target group
   FrontEndDateTimeLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -915,7 +953,6 @@ Resources:
       ListenerArn: !Ref FrontEndDateTimePublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
-  # Enable autoscaling for this service
   FrontEndDateTimeScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: FrontEndDateTimeECSService
@@ -927,7 +964,6 @@ Resources:
       MaxCapacity: 5
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
-  # Create Track scaling policies for the FrontEndDateTime service
   FrontEndDateTimeTargetTrackingScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     DependsOn: 
@@ -948,7 +984,6 @@ Resources:
 #################### 
 # BackEndGreeting resources
 #################### 
-  # A security group for the containers we will run in Fargate. Rules are added to this security group based on what ingress you add for the cluster.
   BackEndGreetingContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -971,14 +1006,6 @@ Resources:
             ToPort: !Ref BackEndGreetingContainerPort
             Description: !Sub Allow access ONLY from FrontEndDateTimeContainerSecurityGroup:${FrontEndDateTimeContainerSecurityGroup} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
 
-  # A log group for storing the stdout logs from this service's containers
-  BackEndGreetingLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${BackEndGreetingServiceName}
-      RetentionInDays: 7
-
-  # The task definition. This is a simple metadata description of what container to run, and what resource requirements it has.
   BackEndGreetingTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -1000,42 +1027,31 @@ Resources:
             - ContainerPort: !Ref 'BackEndGreetingContainerPort'
               Protocol: tcp
               HostPort: !Ref 'BackEndGreetingContainerPort'
-          # Command: 
-          #   # It tells whoami to start listening on 2001 instead of 80
-          #   - --port=2001
-          #   - --name=iamfoo
           Environment: 
-            # - Name: WHOAMI_PORT_NUMBER
-            #   Value: !Ref 'BackEndGreetingContainerPort'
-            # - Name: WHOAMI_NAME
-            #   Value: !Ref 'BackEndGreetingServiceName'
             - Name: SERVER_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${BackEndGreetingServiceName}
+              awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'BackEndGreetingServiceName'
 
-  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
   BackEndGreetingECSService:
     Type: AWS::ECS::Service
     DependsOn: 
       - BackEndGreetingLoadBalancerRule
       - PLMEcsASG
     Properties:
-      # ServiceName: !Ref 'BackEndGreetingServiceName'
       # Cluster:
       #   Fn::ImportValue: !Sub ${EnvironmentName}:PLMEcsCluster
       Cluster: !Ref PLMEcsCluster
       LaunchType: EC2
-      # PlatformVersion: 1.4.0
       HealthCheckGracePeriodSeconds: '180'
       DeploymentConfiguration:
         MaximumPercent: '200'
         MinimumHealthyPercent: '100'
-      DesiredCount: !Ref BackEndGreetingDesiredCount
+      DesiredCount: !Ref ECSTaskDesiredCount
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -1054,7 +1070,6 @@ Resources:
           # ContainerPort: !Ref 'BackEndGreetingContainerPort'
           # ContainerName: !Ref 'BackEndGreetingServiceName'
 
-  # Create a service discovery service in the private service namespace.
   BackEndGreetingServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties:
@@ -1065,18 +1080,15 @@ Resources:
       HealthCheckCustomConfig:
         FailureThreshold: 1
 
-  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
   BackEndGreetingTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
       HealthCheckPath: /backendgreeting
-      # HealthCheckPath: /health
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
-      # Name: !Ref 'BackEndGreetingServiceName'
       Port: !Ref 'BackEndGreetingContainerPort'
       Protocol: HTTP
       UnhealthyThresholdCount: 2
@@ -1097,7 +1109,6 @@ Resources:
       Port: !Ref BackEndGreetingContainerPort
       Protocol: HTTP
 
-  # Create a rule on the load balancer for routing traffic to the target group
   BackEndGreetingLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -1107,12 +1118,9 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values: [!Ref 'Path']
-      # ListenerArn:
-      #   Fn::ImportValue: !Sub ${EnvironmentName}:PublicListener
       ListenerArn: !Ref BackEndGreetingPublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
-  # Enable autoscaling for this service
   BackEndGreetingScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: BackEndGreetingECSService
@@ -1124,7 +1132,6 @@ Resources:
       MaxCapacity: 5
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
-  # Create Target Tracking scaling policies for the BackEndGreeting service
   BackEndGreetingTargetTrackingScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     DependsOn: 
@@ -1152,48 +1159,16 @@ Outputs:
       Name: !Sub ${EnvironmentName}:PLMEcsCluster
 
   # FrontEndDateTime
-  PLMECSTaskExecutionRole:
-    Description: The ARN of the ECS role
-    Value: !GetAtt 'PLMECSTaskExecutionRole.Arn'
-    Export:
-      Name: !Sub ${EnvironmentName}:PLMECSTaskExecutionRole
-  FrontEndDateTimeContainerSecurityGroup:
-    Description: A security group used to allow Fargate containers to receive traffic
-    Value: !Ref 'FrontEndDateTimeContainerSecurityGroup'
-    Export:
-      Name: !Sub ${EnvironmentName}:FrontEndDateTimeContainerSecurityGroup
-  FrontEndDateTimePublicLoadBalancerListener:
-    Description: The ARN of the public load balancer's Listener
-    Value: !Ref FrontEndDateTimePublicLoadBalancerListener
-    Export:
-      Name: !Sub ${EnvironmentName}:FrontEndDateTimePublicLoadBalancerListener
   FrontEndDateTimeExternalUrl:
     Description: The url of the external load balancer
-    # Value: !Sub http://${PublicLoadBalancer.DNSName}
     # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime
     Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
   # BackEndGreeting
-  PLMECSTaskExecutionRole:
-    Description: The ARN of the ECS role
-    Value: !GetAtt 'PLMECSTaskExecutionRole.Arn'
-    Export:
-      Name: !Sub ${EnvironmentName}:PLMECSTaskExecutionRole
-  BackEndGreetingContainerSecurityGroup:
-    Description: A security group used to allow Fargate containers to receive traffic
-    Value: !Ref 'BackEndGreetingContainerSecurityGroup'
-    Export:
-      Name: !Sub ${EnvironmentName}:BackEndGreetingContainerSecurityGroup
-  BackEndGreetingPublicLoadBalancerListener:
-    Description: The ARN of the public load balancer's Listener
-    Value: !Ref BackEndGreetingPublicLoadBalancerListener
-    Export:
-      Name: !Sub ${EnvironmentName}:BackEndGreetingPublicLoadBalancerListener
   BackEndGreetingExternalUrl:
     Description: The url of the external load balancer
-    # Value: !Sub http://${PublicLoadBalancer.DNSName}
     # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/backendgreeting
     Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/backendgreeting
     Export:
@@ -1207,7 +1182,6 @@ Outputs:
   # FrontEndDateTimeBackEndGreeting
   FrontEndDateTimeBackEndGreetingExternalUrl:
     Description: The url of the external load balancer
-    # Value: !Sub http://${PublicLoadBalancer.DNSName}
     # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
     Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
     Export:
