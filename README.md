@@ -3,9 +3,5 @@ Why my ECS task Stopped?
 Lab to understand why ECS task are Stopped?
 
 ## 1. PLM1TaskStoppedByUser 
-- Title:  `paper name`
-- Authors:  `A`,`B`,`C`
-- Preprint: [https://arxiv.org/abs/xx]()
-- Full-preprint: [paper position]()
-- Video: [video position]()
-
+Why the task task stopped in the ECS Service `PLM-ECS-PLM1TaskStoppedByUserECSService`
+- f4b2fb53fd724e8fa0b8d6986196b8d2
