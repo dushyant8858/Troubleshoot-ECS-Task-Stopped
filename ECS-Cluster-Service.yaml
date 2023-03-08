@@ -385,13 +385,13 @@ Resources:
       VPCZoneIdentifier:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
-      MinSize: '1'
+      MinSize: '2'
       MaxSize: '4'
-      DesiredCapacity: '1'
+      DesiredCapacity: '2'
       # NewInstancesProtectedFromScaleIn: true
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '1'
+        MinInstancesInService: '2'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -504,7 +504,7 @@ Resources:
               Value: !Ref 'FrontEndDateTimeContainerPort'
             - Name: REST_HOSTNAME
               # backendgreeting.backendgreeting
-              Value: !Sub ${BackEndGreetingServiceName}.{BackEndGreetingPrivateServiceDiscoveryNamespace}
+              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}
             - Name: REST_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
