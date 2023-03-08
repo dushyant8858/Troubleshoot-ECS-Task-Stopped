@@ -1,0 +1,1338 @@
+# aws cloudformation create-stack --template-body file://Problematic_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file://Problematic_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+
+# while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
+
+# aws cloudformation delete-stack --region us-west-2 --stack-name PLM-ECS
+
+################################################################################################################
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a service on AWS Fargate, hosted in a private subnet, but accessible via a public load balancer.
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: PLM
+    Description: The name of the environment to add this service to
+
+# Common ECS Task/Contaienr Pameters
+  ContainerCpu:
+    Type: Number
+    Default: 256
+  ContainerMemory:
+    Type: Number
+    Default: 512
+  PLMImageUrl:
+    Type: String
+    Default: dushyant8858/traefik-whoami:latest
+  ECSTaskDesiredCount:
+    Type: Number
+    Default: 1
+
+# PLM1TaskStoppedByUser resources
+  PLM1TaskStoppedByUserServiceName:
+    Type: String
+    Default: PLM1TaskStoppedByUser
+  PLM1TaskStoppedByUserContainerPort:
+    Type: Number
+    Default: '8001'
+    Description: What port number the application inside the docker container is binding to
+    
+# PLM2ServiceScalingEventTriggered service Parameters
+  PLM2ServiceScalingEventTriggeredServiceName:
+    Type: String
+    Default: PLM2ServiceScalingEventTriggered
+  PLM2ServiceScalingEventTriggeredContainerPort:
+    Type: Number
+    Default: '8002'
+  PLM2ServiceScalingEventTriggeredDesiredCount:
+    Type: Number
+    Default: 1
+
+# PLM3UnhealthyContainerInstance service Parameters
+  PLM3UnhealthyContainerInstanceServiceName:
+    Type: String
+    Default: PLM3UnhealthyContainerInstance
+  PLM3UnhealthyContainerInstanceContainerPort:
+    Type: Number
+    Default: '8003'
+
+# PLM4CannotPullContainerError service Parameters
+  PLM4CannotPullContainerErrorServiceName:
+    Type: String
+    Default: PLM4CannotPullContainerError
+  PLM4CannotPullContainerErrorContainerPort:
+    Type: Number
+    Default: '8004'
+
+# PLM5ResourceInitializationError service Parameters
+  PLM5ResourceInitializationErrorServiceName:
+    Type: String
+    Default: PLM5ResourceInitializationError
+  PLM5ResourceInitializationErrorContainerPort:
+    Type: Number
+    Default: '8005'
+
+# FrontEndDateTime = DateTim
+# FrontEndDateTime Service Parameters 
+  FrontEndDateTimeServiceName:
+    Type: String
+    Default: FrontEndDateTime
+  FrontEndDateTimeImageUrl:
+    Type: String
+    Default: dushyant8858/frontenddatetime:latest
+  FrontEndDateTimeContainerPort:
+    Type: Number
+    Default: '80'
+
+# BackEndGreeting = BackEndGreeting
+# BackEndGreeting Service Parameters 
+  BackEndGreetingServiceName:
+    Type: String
+    Default: BackEndGreeting
+  BackEndGreetingImageUrl:
+    Type: String
+    # Default: traefik/whoami:latest
+    Default: dushyant8858/backendgreeting:latest
+  BackEndGreetingContainerPort:
+    Type: Number
+    Default: '8080'
+
+# ALB Parameters 
+  Path:
+    Type: String
+    Default: "*"
+    Description: A path on the load balancer that this service should be connected to. Use * to send all load balancer traffic to this service.
+  Priority:
+    Type: Number
+    Default: 1
+    Description: The priority for the routing rule added to the load balancer. This only applies if your have multiple services which have been assigned to different paths on the load balancer.
+
+  HostedZoneId:
+    Description: HostedZone ID
+    Type: String
+    Default: 'Z38JIISUVMYB2F'
+  HostedZoneName:
+    Description: HostedZone Name
+    Type: String
+    Default: 'dubaria.myinstance.com'
+  PLMPublicLoadBalancerSubDomainNameWithDot:
+    Description: 'Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires ParentZoneStack parameter!'
+    Type: String
+    Default: 'PLM.'
+
+  DomainBackEndGreetingPrivateServiceDiscoveryNamespace:
+    Type: String
+    Default: BackEndGreeting
+    Description: The name of the namespace. Services are prepended, for example user.service.production
+
+# ASG / AutoScaling Parameters
+  InstanceType:
+    Description: Type of EC2 instance to use
+    Type: String
+    AllowedValues:
+      - c5.large
+    ConstraintDescription: Must be a size from t2 instance families
+    Default: c5.large
+
+Mappings:
+  InstanceArchMap:
+    c5.large:
+      Arch: X8664
+  RegionAmiMap:
+    us-west-2:
+      # aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-west-2 --query Parameters[].Value --output text
+      X8664: ami-0ae546d2dd33d2039
+
+Resources:
+# ECS Resources
+  PLMEcsCluster:
+    Type: AWS::ECS::Cluster
+
+  PLMPublicLoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public facing load balancer
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+  PLMPublicLoadBalancerSGIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref PLMPublicLoadBalancerSG
+      CidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 9999
+      Description: Allow access to ALB from ALL IP on port 80-9999
+
+  PLMECSContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the EC2 PLMECSContainerSecurityGroup containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+  PLMECSContainerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref PLMECSContainerSecurityGroup
+      SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 9999
+      Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on ALL Port
+
+  PLMPublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: '30'
+      Subnets:
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
+      SecurityGroups: [!Ref 'PLMPublicLoadBalancerSG']
+  PLMPublicLoadBalancerRecordSet:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub
+        - '${PLMPublicLoadBalancerSubDomainNameWithDot}${HostedZoneName}'
+        - SubDomainNameWithDot: !Ref PLMPublicLoadBalancerSubDomainNameWithDot
+          HostedZoneName: !Ref HostedZoneName
+      ResourceRecords:
+        - !GetAtt 'PLMPublicLoadBalancer.DNSName'
+      TTL: 300
+      Type: CNAME
+
+  BackEndGreetingPrivateServiceDiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Ref DomainBackEndGreetingPrivateServiceDiscoveryNamespace
+      # Name: !Ref BackEndGreetingServiceName
+      Vpc:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+
+###################
+# ASG resources
+###################
+  ECSInstanceProfileRole:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Roles: 
+        - !Ref ECSInstanceRole
+  ECSInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  PLMEcsLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          base_setup:
+            - cfn_hup
+            - ecs_configure
+            - install_pkgs
+            - enable_sysstat
+        cfn_hup:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Join 
+                - ''
+                - - |
+                    [main]
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - |+
+
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - |+
+
+                  - |
+                    interval=5
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join 
+                - ''
+                - - |
+                    [cfn-auto-reloader-hook]
+                  - |
+                    triggers=post.update
+                  - >
+                    path=Resources.PLMEcsLaunchTemplate.Metadata.AWS::CloudFormation::Init
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - '   --stack '
+                  - !Ref 'AWS::StackName'
+                  - '   --resource PLMEcsLaunchTemplate '
+                  - '   --configsets base_setup '
+                  - '   --region '
+                  - !Ref 'AWS::Region'
+                  - |+
+
+                  - |
+                    runas=root
+              mode: '000400'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        ecs_configure:
+          files:
+            /etc/ecs/ecs.config:
+              content: !Join 
+                - ''
+                - - 'ECS_CLUSTER='
+                  - !Ref 'PLMEcsCluster'
+                  - |+
+
+                  - >
+                    ECS_AVAILABLE_LOGGING_DRIVERS=["json-file","awslogs","journald","logentries","syslog"]
+                  - |
+                    ECS_ENABLE_TASK_IAM_ROLE=true
+                  - |
+                    ECS_RESERVED_MEMORY=64
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+        install_pkgs:
+          packages:
+            yum:
+              sysstat: []
+              awscli: []
+              bind-utils: []
+        enable_sysstat:
+          services:
+            sysvinit:
+              sysstat:
+                enabled: 'true'
+                ensureRunning: 'true'
+    Properties:
+      LaunchTemplateData:
+        InstanceType: !Ref InstanceType
+        ImageId: !FindInMap 
+          - RegionAmiMap
+          - !Ref 'AWS::Region'
+          - !FindInMap 
+            - InstanceArchMap
+            - !Ref InstanceType
+            - Arch
+        SecurityGroupIds:
+          - !Ref PLMECSContainerSecurityGroup
+          - !Ref PLMECSContainerSecurityGroup
+        IamInstanceProfile: 
+          Name: !Ref ECSInstanceProfileRole
+        UserData: !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash -xe
+              - |
+                yum update -y 
+              - |
+                yum install aws-cfn-bootstrap -y 
+              - '/opt/aws/bin/cfn-init -v '
+              - '   --stack '
+              - !Ref 'AWS::StackId'
+              - '   --resource PLMEcsLaunchTemplate '
+              - '   --configsets base_setup '
+              - '   --region '
+              - !Ref 'AWS::Region'
+              - |+
+
+              - '/opt/aws/bin/cfn-signal -e $? '
+              - '   --stack '
+              - !Ref 'AWS::StackId'
+              - '   --resource PLMEcsASG '
+              - '   --region '
+              - !Ref 'AWS::Region'
+              - |+
+
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub '${AWS::StackName}-PLMEcsASG'
+  PLMEcsASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: PLMEcsCluster
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref PLMEcsLaunchTemplate
+        Version: !GetAtt 
+          - PLMEcsLaunchTemplate
+          - LatestVersionNumber
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      MinSize: '1'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      # NewInstancesProtectedFromScaleIn: true
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        WaitOnResourceSignals: true
+        PauseTime: PT5M
+    CreationPolicy:
+      ResourceSignal:
+        Count: '1'
+        Timeout: PT5M
+
+####################
+# IAM resources
+####################
+  # This is a role which is used by the ECS Agent to pull the images, secret, etc... i.e permission require to start the task.
+  PLMECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        
+  # This is a role which is used by the ECS tasks themselves.
+  PLMECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+####################
+# AWS CloudWatch LogGroup resources
+####################
+  PLMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${EnvironmentName}-LogGroup
+      RetentionInDays: 7
+
+
+####################
+# PLM1TaskStoppedByUser resources
+####################
+  PLM1TaskStoppedByUserTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM1TaskStoppedByUserServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM1TaskStoppedByUserServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLMImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM1TaskStoppedByUserContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM1TaskStoppedByUserContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM1TaskStoppedByUserContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM1TaskStoppedByUserServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM1TaskStoppedByUserServiceName'
+  PLM1TaskStoppedByUserECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+      - PLM1TaskStoppedByUserLoadBalancerRule
+    Properties:
+      # ServiceName: !Ref 'PLM1TaskStoppedByUserServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLMECSContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM1TaskStoppedByUserTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM1TaskStoppedByUserServiceName'
+          ContainerPort: !Ref PLM1TaskStoppedByUserContainerPort
+          TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+
+  PLM1TaskStoppedByUserTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM1TaskStoppedByUserContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM1TaskStoppedByUserPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM1TaskStoppedByUserContainerPort
+      Protocol: HTTP
+
+  PLM1TaskStoppedByUserLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM1TaskStoppedByUserPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+####################
+# PLM2ServiceScalingEventTriggered resources
+####################
+  PLM2ServiceScalingEventTriggeredTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLMImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+  PLM2ServiceScalingEventTriggeredECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+      - PLM2ServiceScalingEventTriggeredLoadBalancerRule
+    Properties:
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref PLM2ServiceScalingEventTriggeredDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLMECSContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM2ServiceScalingEventTriggeredTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+          ContainerPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+          TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+
+  PLM2ServiceScalingEventTriggeredTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM2ServiceScalingEventTriggeredPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+      Protocol: HTTP
+
+  PLM2ServiceScalingEventTriggeredLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM2ServiceScalingEventTriggeredPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+  PLM2ServiceScalingEventTriggeredScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PLM2ServiceScalingEventTriggeredECSService
+    Properties:
+      ServiceNamespace: 'ecs'
+      ScalableDimension: 'ecs:service:DesiredCount'
+      ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ] 
+      MinCapacity: 1
+      MaxCapacity: 20
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+
+  PLM2ServiceScalingEventTriggeredTargetTrackingScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: 
+      - PLM2ServiceScalingEventTriggeredLoadBalancerRule
+    Properties:
+      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ]
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PLM2ServiceScalingEventTriggeredScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 100.00
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+
+####################
+# PLM3UnhealthyContainerInstance resources
+####################
+  PLMECSContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the EC2 PLM3UnhealthyContainerInstance containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            IpProtocol: tcp
+            FromPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+            ToPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM3UnhealthyContainerInstanceContainerPort}
+
+  PLM3UnhealthyContainerInstanceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLMImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM3UnhealthyContainerInstanceServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+  PLM3UnhealthyContainerInstanceECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+      - PLM3UnhealthyContainerInstanceLoadBalancerRule
+    Properties:
+      # ServiceName: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLMECSContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM3UnhealthyContainerInstanceTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM3UnhealthyContainerInstanceServiceName'
+          ContainerPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
+          TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+
+  PLM3UnhealthyContainerInstanceTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM3UnhealthyContainerInstancePublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM3UnhealthyContainerInstanceContainerPort
+      Protocol: HTTP
+
+  PLM3UnhealthyContainerInstanceLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM3UnhealthyContainerInstanceTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM3UnhealthyContainerInstancePublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+####################
+# PLM4CannotPullContainerError resources
+####################
+  PLM4CannotPullContainerErrorTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM4CannotPullContainerErrorServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLMImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM4CannotPullContainerErrorContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM4CannotPullContainerErrorServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM4CannotPullContainerErrorServiceName'
+  PLM4CannotPullContainerErrorECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+      - PLM4CannotPullContainerErrorLoadBalancerRule
+    Properties:
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLMECSContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM4CannotPullContainerErrorTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM4CannotPullContainerErrorServiceName'
+          ContainerPort: !Ref PLM4CannotPullContainerErrorContainerPort
+          TargetGroupArn: !Ref 'PLM4CannotPullContainerErrorTargetGroup'
+
+  PLM4CannotPullContainerErrorTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM4CannotPullContainerErrorContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM4CannotPullContainerErrorPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM4CannotPullContainerErrorTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM4CannotPullContainerErrorContainerPort
+      Protocol: HTTP
+
+  PLM4CannotPullContainerErrorLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM4CannotPullContainerErrorTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM4CannotPullContainerErrorPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+####################
+# PLM5ResourceInitializationError resources
+####################
+  PLM5ResourceInitializationErrorTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM5ResourceInitializationErrorServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLMImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM5ResourceInitializationErrorServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM5ResourceInitializationErrorServiceName'
+  PLM5ResourceInitializationErrorECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+      - PLM5ResourceInitializationErrorLoadBalancerRule
+    Properties:
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLMECSContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM5ResourceInitializationErrorTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM5ResourceInitializationErrorServiceName'
+          ContainerPort: !Ref PLM5ResourceInitializationErrorContainerPort
+          TargetGroupArn: !Ref 'PLM5ResourceInitializationErrorTargetGroup'
+
+  PLM5ResourceInitializationErrorTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM5ResourceInitializationErrorContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM5ResourceInitializationErrorPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM5ResourceInitializationErrorTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM5ResourceInitializationErrorContainerPort
+      Protocol: HTTP
+
+  PLM5ResourceInitializationErrorLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM5ResourceInitializationErrorTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM5ResourceInitializationErrorPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################
+# FrontEndDateTime resources
+####################
+  FrontEndDateTimeContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the EC2 FrontEndDateTime containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            IpProtocol: tcp
+            FromPort: !Ref FrontEndDateTimeContainerPort
+            ToPort: !Ref FrontEndDateTimeContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
+
+  FrontEndDateTimeTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'FrontEndDateTimeServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'FrontEndDateTimeServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'FrontEndDateTimeImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'FrontEndDateTimeContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'FrontEndDateTimeContainerPort'
+          Environment: 
+            - Name: SERVER_PORT
+              Value: !Ref 'FrontEndDateTimeContainerPort'
+            - Name: REST_HOSTNAME
+              # backendgreeting.backendgreeting
+              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}
+            - Name: REST_PORT
+              Value: !Ref 'BackEndGreetingContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'FrontEndDateTimeServiceName'
+
+  FrontEndDateTimeECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - BackEndGreetingECSService
+      - FrontEndDateTimeLoadBalancerRule
+      - PLMEcsASG
+    Properties:
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref FrontEndDateTimeContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'FrontEndDateTimeTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'FrontEndDateTimeServiceName'
+          ContainerPort: !Ref FrontEndDateTimeContainerPort
+          TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
+
+  FrontEndDateTimeTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      # HealthCheckPath: /frontenddatetime/backendgreeting
+      HealthCheckPath: /frontenddatetime
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'FrontEndDateTimeContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  FrontEndDateTimePublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref FrontEndDateTimeContainerPort
+      Protocol: HTTP
+
+  FrontEndDateTimeLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref FrontEndDateTimePublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+#################### 
+# BackEndGreeting resources
+#################### 
+  BackEndGreetingContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the EC2 BackEndGreeting containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB from anywhere on the internet
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref BackEndGreetingContainerPort
+            ToPort: !Ref BackEndGreetingContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
+          # Allow access ONLY from ALB from anywhere on the internet
+          - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref BackEndGreetingContainerPort
+            ToPort: !Ref BackEndGreetingContainerPort
+            Description: !Sub Allow access ONLY from FrontEndDateTimeContainerSecurityGroup:${FrontEndDateTimeContainerSecurityGroup} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
+
+  BackEndGreetingTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'BackEndGreetingServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'BackEndGreetingServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'BackEndGreetingImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'BackEndGreetingContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'BackEndGreetingContainerPort'
+          Environment: 
+            - Name: SERVER_PORT
+              Value: !Ref 'BackEndGreetingContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref PLMLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'BackEndGreetingServiceName'
+
+  BackEndGreetingECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - BackEndGreetingLoadBalancerRule
+      - PLMEcsASG
+    Properties:
+      # Cluster:
+      #   Fn::ImportValue: !Sub ${EnvironmentName}:PLMEcsCluster
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '30'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref ECSTaskDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref BackEndGreetingContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'BackEndGreetingTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'BackEndGreetingServiceName'
+          ContainerPort: !Ref BackEndGreetingContainerPort
+          TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
+      ServiceRegistries:
+        - RegistryArn: !GetAtt BackEndGreetingServiceDiscoveryService.Arn
+          # ContainerPort: !Ref 'BackEndGreetingContainerPort'
+          # ContainerName: !Ref 'BackEndGreetingServiceName'
+
+  BackEndGreetingServiceDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: !Ref BackEndGreetingServiceName
+      DnsConfig:
+        DnsRecords: [{Type: A, TTL: "30"}]
+        NamespaceId: !Ref BackEndGreetingPrivateServiceDiscoveryNamespace
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+
+  BackEndGreetingTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /backendgreeting
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'BackEndGreetingContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  BackEndGreetingPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref BackEndGreetingContainerPort
+      Protocol: HTTP
+
+  BackEndGreetingLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref BackEndGreetingPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+
+# These are the values output by the CloudFormation template. Be careful about changing any of them, because of them are exported with specific names so that the other task related CF templates can use them.
+Outputs:
+  PLMEcsCluster:
+    Description: The name of the ECS cluster
+    Value: !Ref 'PLMEcsCluster'
+    Export:
+      Name: !Sub ${EnvironmentName}:PLMEcsCluster
+
+  # FrontEndDateTime
+  FrontEndDateTimeExternalUrl:
+    Description: The url of the external load balancer
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime
+    Export:
+      Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
+
+  # BackEndGreeting
+  BackEndGreetingExternalUrl:
+    Description: The url of the external load balancer
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/backendgreeting
+    Export:
+      Name: !Sub ${EnvironmentName}:BackEndGreetingExternalUrl
+  BackEndGreetingPrivateServiceDiscoveryNamespace:
+    Description: The ID of the private service discovery namespace
+    Value: !Ref BackEndGreetingPrivateServiceDiscoveryNamespace
+    Export:
+      Name: !Sub ${EnvironmentName}:BackEndGreetingPrivateServiceDiscoveryNamespace
+  
+  # FrontEndDateTimeBackEndGreeting
+  FrontEndDateTimeBackEndGreetingExternalUrl:
+    Description: The url of the external load balancer
+    # Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
+    Export:
+      Name: !Sub ${EnvironmentName}:FrontEndDateTimeBackEndGreetingExternalUrl

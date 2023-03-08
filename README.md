@@ -23,6 +23,10 @@ Why the below task stopped in the ECS Service `PLM-ECS-PLM2ServiceScalingEventTr
 - `c9db581bee43476eab9894cf1ae193e7`
 
 CannotStartContainerError
-
-
+18977b93c0ff43ad8d50cc094848e2dc
 Status reason	CannotStartContainerError: Error response from daemon: failed to initialize logging driver: failed to create Cloudwatch log stream: ResourceNotFoundException: The specified log group does not exist.
+
+
+
+
+59b93f2f38554f51b75f0ea827723c3c - Status reason	CannotPullContainerError: no matching manifest for linux/amd64 in the manifest list entries
