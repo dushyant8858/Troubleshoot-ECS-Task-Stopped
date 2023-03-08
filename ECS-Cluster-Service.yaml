@@ -384,14 +384,14 @@ Resources:
           - LatestVersionNumber
       VPCZoneIdentifier:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
-        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
-      MinSize: '2'
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      MinSize: '1'
       MaxSize: '4'
-      DesiredCapacity: '2'
+      DesiredCapacity: '1'
       # NewInstancesProtectedFromScaleIn: true
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '2'
+        MinInstancesInService: '1'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -599,8 +599,8 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'FrontEndDateTimeECSService.Name' ] ] 
-      MinCapacity: 0
-      MaxCapacity: 2
+      MinCapacity: 1
+      MaxCapacity: 5
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
   # Create Track scaling policies for the FrontEndDateTime service
@@ -823,8 +823,8 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'BackEndGreetingECSService.Name' ] ] 
-      MinCapacity: 0
-      MaxCapacity: 2
+      MinCapacity: 1
+      MaxCapacity: 5
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
   # Create Target Tracking scaling policies for the BackEndGreeting service
