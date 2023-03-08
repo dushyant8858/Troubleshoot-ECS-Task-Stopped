@@ -46,6 +46,25 @@ Parameters:
     Default: 1
     Description: How many copies of the service task to run
 
+# PLM2ServiceScalingEventTriggered service Parameters
+  PLM2ServiceScalingEventTriggeredServiceName:
+    Type: String
+    Default: PLM2ServiceScalingEventTriggered
+    Description: PLM PLM2ServiceScalingEventTriggered service
+  PLM2ServiceScalingEventTriggeredImageUrl:
+    Type: String
+    Default: dushyant8858/traefik-whoami:latest
+    Description: The url of a docker image that contains the PLM2ServiceScalingEventTriggered application process that will handle the traffic for this service
+  PLM2ServiceScalingEventTriggeredContainerPort:
+    Type: Number
+    Default: '8002'
+    Description: What port number the application inside the docker container is binding to
+  PLM2ServiceScalingEventTriggeredDesiredCount:
+    Type: Number
+    Default: 5
+    Description: How many copies of the service task to run
+
+
 
 # FrontEndDateTime = DateTim
 # FrontEndDateTime Service Parameters 
@@ -565,6 +584,166 @@ Resources:
       ListenerArn: !Ref PLM1TaskStoppedByUserPublicLoadBalancerListener
       Priority: !Ref 'Priority'
 
+####################
+# PLM2ServiceScalingEventTriggered resources
+####################
+  PLM2ServiceScalingEventTriggeredContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Fargate PLM2ServiceScalingEventTriggered containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+            ToPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM2ServiceScalingEventTriggeredContainerPort}
+
+  # A log group for storing the stdout logs from this service's containers
+  PLM2ServiceScalingEventTriggeredLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${PLM2ServiceScalingEventTriggeredServiceName}
+      RetentionInDays: 7
+
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  PLM2ServiceScalingEventTriggeredTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLM2ServiceScalingEventTriggeredImageUrl'
+          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLM2ServiceScalingEventTriggeredECRRepositoryName}:latest
+          PortMappings:
+            - ContainerPort: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${PLM2ServiceScalingEventTriggeredServiceName}
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
+  PLM2ServiceScalingEventTriggeredECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+    Properties:
+      # ServiceName: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '180'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref PLM2ServiceScalingEventTriggeredDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLM2ServiceScalingEventTriggeredContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM2ServiceScalingEventTriggeredTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'
+          ContainerPort: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+          TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+
+  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
+  PLM2ServiceScalingEventTriggeredTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM2ServiceScalingEventTriggeredPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM2ServiceScalingEventTriggeredContainerPort
+      Protocol: HTTP
+
+  # Create a rule on the load balancer for routing traffic to the target group
+  PLM2ServiceScalingEventTriggeredLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM2ServiceScalingEventTriggeredTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM2ServiceScalingEventTriggeredPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+  # Enable autoscaling for this service
+  PLM2ServiceScalingEventTriggeredScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PLM2ServiceScalingEventTriggeredECSService
+    Properties:
+      ServiceNamespace: 'ecs'
+      ScalableDimension: 'ecs:service:DesiredCount'
+      ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ] 
+      MinCapacity: 1
+      MaxCapacity: 5
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+
+  # Create Track scaling policies for the PLM2ServiceScalingEventTriggered service
+  PLM2ServiceScalingEventTriggeredTargetTrackingScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: 
+      - PLM2ServiceScalingEventTriggeredLoadBalancerRule
+      - PLM2ServiceScalingEventTriggeredECSService
+      - PLM2ServiceScalingEventTriggeredScalableTarget
+    Properties:
+      PolicyName: !Join [ '/' , [ 'scale' , !Ref 'EnvironmentName' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ]
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PLM2ServiceScalingEventTriggeredScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 100.00
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 
 
 
