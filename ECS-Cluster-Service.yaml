@@ -18,6 +18,35 @@ Parameters:
     Default: PLM
     Description: The name of the environment to add this service to
 
+# Common ECS Task/Contaienr Pameters
+  ContainerCpu:
+    Type: Number
+    Default: 256
+    Description: How much CPU to give the container. 1024 is 1 CPU
+  ContainerMemory:
+    Type: Number
+    Default: 512
+    Description: How much memory in megabytes to give the 
+
+# PLM1TaskStoppedByUser resources
+  PLM1TaskStoppedByUserServiceName:
+    Type: String
+    Default: PLM1TaskStoppedByUser
+    Description: PLM PLM1TaskStoppedByUser service
+  PLM1TaskStoppedByUserImageUrl:
+    Type: String
+    Default: dushyant8858/traefik-whoami:latest
+    Description: The url of a docker image that contains the PLM1TaskStoppedByUser application process that will handle the traffic for this service
+  PLM1TaskStoppedByUserContainerPort:
+    Type: Number
+    Default: '8001'
+    Description: What port number the application inside the docker container is binding to
+  PLM1TaskStoppedByUserDesiredCount:
+    Type: Number
+    Default: 1
+    Description: How many copies of the service task to run
+
+
 # FrontEndDateTime = DateTim
 # FrontEndDateTime Service Parameters 
   FrontEndDateTimeServiceName:
@@ -29,25 +58,11 @@ Parameters:
     # Default: httpd:latest
     Default: dushyant8858/frontenddatetime:latest
     Description: The url of a docker image that contains the FrontEndDateTime application process that will handle the traffic for this service
-  FrontEndDateTimeECRRepositoryName:
-    Type: String
-    Default: 'PLM-FrontEndDateTime'
-    Description: ECR repository Name that you need to create for FrontEndDateTime images 
   FrontEndDateTimeContainerPort:
     Type: Number
     Default: '80'
     # Default: '8083'
     Description: What port number the application inside the docker container is binding to
-  FrontEndDateTimeContainerCpu:
-    Type: Number
-    Default: 256
-    # Default: 1024    
-    Description: How much CPU to give the container. 1024 is 1 CPU
-  FrontEndDateTimeContainerMemory:
-    Type: Number
-    Default: 512
-    # Default: 4096
-    Description: How much memory in megabytes to give the 
   FrontEndDateTimeDesiredCount:
     Type: Number
     Default: 1
@@ -64,25 +79,11 @@ Parameters:
     # Default: traefik/whoami:latest
     Default: dushyant8858/backendgreeting:latest
     Description: The url of a docker image that contains the  application process that will handle the traffic for this service
-  BackEndGreetingECRRepositoryName:
-    Type: String
-    Default: nginx
-    Description: ECR repository Name that you need to create for  images 
   BackEndGreetingContainerPort:
     Type: Number
     Default: '8080'
     # Default: '8084'
     Description: What port number the application inside the docker container is binding to
-  BackEndGreetingContainerCpu:
-    Type: Number
-    Default: 256
-    # Default: 1024    
-    Description: How much CPU to give the container. 1024 is 1 CPU
-  BackEndGreetingContainerMemory:
-    Type: Number
-    Default: 512
-    # Default: 4096
-    Description: How much memory in megabytes to give the 
   BackEndGreetingDesiredCount:
     Type: Number
     Default: 1
@@ -161,16 +162,19 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+            FromPort: 8001
+            ToPort: 8020
+            Description: Allow access to ALB from anywhere on the internet to BackEndGreeting ECS Service
           # Allow access to ALB from anywhere on the internet to FrontEndDateTime ECS Service 
           - CidrIp: 0.0.0.0/0
-            # IpProtocol: -1
             IpProtocol: tcp
             FromPort: !Ref FrontEndDateTimeContainerPort
             ToPort: !Ref FrontEndDateTimeContainerPort
             Description: Allow access to ALB from anywhere on the internet to FrontEndDateTime ECS Service
           # Allow access to ALB from anywhere on the internet to BackEndGreeting ECS Service
           - CidrIp: 0.0.0.0/0
-            # IpProtocol: -1
             IpProtocol: tcp
             FromPort: !Ref BackEndGreetingContainerPort
             ToPort: !Ref BackEndGreetingContainerPort
@@ -339,7 +343,6 @@ Resources:
           # - !Ref ContainerSecurityGroup
           - !Ref FrontEndDateTimeContainerSecurityGroup
           - !Ref BackEndGreetingContainerSecurityGroup
-          # - !Ref NishitDushyantPLMEcsInstanceSecurityGroup
         IamInstanceProfile: 
           Name: !Ref ECSInstanceProfileRole
         UserData: !Base64 
@@ -387,7 +390,7 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       MinSize: '1'
       MaxSize: '4'
-      DesiredCapacity: '1'
+      DesiredCapacity: '2'
       # NewInstancesProtectedFromScaleIn: true
     UpdatePolicy:
       AutoScalingRollingUpdate:
@@ -399,51 +402,11 @@ Resources:
         Count: '1'
         Timeout: PT5M
 
-  # PLMEcsInstanceSecurityGroup:
-  #   Type: 'AWS::EC2::SecurityGroup'
-  #   Properties:
-  #     GroupDescription: Nishit Dushyant ECS Instance Security Group
-  #     VpcId: {'Fn::ImportValue': !Sub '${EnvironmentName}:VpcId'}
-  #     # SecurityGroupIngress:
-  #     #   - Description: Allow traffic from [NISHITs Home to PLM ECS Instance]
-  #     #     IpProtocol: tcp
-  #     #     FromPort: 22
-  #     #     ToPort: 22
-  #     #     # CidrIp: !Join ['' , [{'Fn::ImportValue': !Sub '${EnvironmentName}:NatGatewayOneAttachment'} , '/32' ] ]
-  #     #     # http://checkip.amazonaws.com/
-  #     #     CidrIp: !Join ['' , ['71.150.221.250' , '/32' ] ]
-  #     #   - Description: Allow traffic from [Dushyants Home to PLM ECS Instance]
-  #     #     IpProtocol: tcp
-  #     #     FromPort: 22
-  #     #     ToPort: 22
-  #     #     CidrIp: !Join ['' , ['74.141.7.117' , '/32' ] ]
-  #     # Tags: 
-  #     #   - Key: Name
-  #     #     Value: DUSHYANT ECS Instance SSH
-
-
 ####################
-# FrontEndDateTime resources
+# IAM resources
 ####################
-  # A security group for the containers we will run in Fargate. Rules are added to this security group based on what ingress you add for the cluster.
-  FrontEndDateTimeContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Access to the Fargate FrontEndDateTime containers
-      # VpcId: !Ref 'VPC' Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      VpcId: 
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      SecurityGroupIngress:
-          # Allow access ONLY from ALB 
-          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
-            # IpProtocol: -1
-            IpProtocol: tcp
-            FromPort: !Ref FrontEndDateTimeContainerPort
-            ToPort: !Ref FrontEndDateTimeContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
-
-  # This is a role which is used by the ECS tasks themselves.
-  FrontEndDateTimeECSTaskExecutionRole:
+  # This is a role which is used by the ECS Agent to pull the images, secret, etc... i.e permission require to start the task.
+  PLMECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -455,7 +418,9 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  FrontEndDateTimeECSTaskRole:
+        
+  # This is a role which is used by the ECS tasks themselves.
+  PLMECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -467,6 +432,186 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+
+####################
+# PLM1TaskStoppedByUser resources
+####################
+  PLM1TaskStoppedByUserContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Fargate PLM1TaskStoppedByUser containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref PLM1TaskStoppedByUserContainerPort
+            ToPort: !Ref PLM1TaskStoppedByUserContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM1TaskStoppedByUserContainerPort}
+
+  # A log group for storing the stdout logs from this service's containers
+  PLM1TaskStoppedByUserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${EnvironmentName}-ECSservice-${PLM1TaskStoppedByUserServiceName}
+      RetentionInDays: 7
+
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  PLM1TaskStoppedByUserTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'PLM1TaskStoppedByUserServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+        - EC2
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ContainerDefinitions:
+        - Name: !Ref 'PLM1TaskStoppedByUserServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'PLM1TaskStoppedByUserImageUrl'
+          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLM1TaskStoppedByUserECRRepositoryName}:latest
+          PortMappings:
+            - ContainerPort: !Ref 'PLM1TaskStoppedByUserContainerPort'
+              Protocol: tcp
+              HostPort: !Ref 'PLM1TaskStoppedByUserContainerPort'
+          Environment: 
+            - Name: WHOAMI_PORT_NUMBER
+              Value: !Ref 'PLM1TaskStoppedByUserContainerPort'
+            - Name: WHOAMI_NAME
+              Value: !Ref 'PLM1TaskStoppedByUserServiceName'          
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Sub ${EnvironmentName}-ECSservice-${PLM1TaskStoppedByUserServiceName}
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'PLM1TaskStoppedByUserServiceName'
+  # The service. The service is a resource which allows you to run multiple copies of a type of task, and gather up their logs and metrics, as well as monitor the number of running tasks and replace any that have crashed
+  PLM1TaskStoppedByUserECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - PLMEcsASG
+    Properties:
+      # ServiceName: !Ref 'PLM1TaskStoppedByUserServiceName'
+      Cluster: !Ref PLMEcsCluster
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: '180'
+      DeploymentConfiguration:
+        MaximumPercent: '200'
+        MinimumHealthyPercent: '100'
+      DesiredCount: !Ref PLM1TaskStoppedByUserDesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref PLM1TaskStoppedByUserContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Ref 'PLM1TaskStoppedByUserTaskDefinition'
+      LoadBalancers:
+        - ContainerName: !Ref 'PLM1TaskStoppedByUserServiceName'
+          ContainerPort: !Ref PLM1TaskStoppedByUserContainerPort
+          TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+
+  # A target group. This is used for keeping track of all the tasks, and what IP addresses / port numbers they have. You can query it yourself, to use the addresses yourself, but most often this target group is just connected to an application load balancer, or network load balancer, so it can automatically divstribute traffic across all the targets.
+  PLM1TaskStoppedByUserTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      TargetType: ip
+      Port: !Ref 'PLM1TaskStoppedByUserContainerPort'
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+
+  PLM1TaskStoppedByUserPublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: PLMPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
+      Port: !Ref PLM1TaskStoppedByUserContainerPort
+      Protocol: HTTP
+
+  # Create a rule on the load balancer for routing traffic to the target group
+  PLM1TaskStoppedByUserLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PLM1TaskStoppedByUserTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: [!Ref 'Path']
+      ListenerArn: !Ref PLM1TaskStoppedByUserPublicLoadBalancerListener
+      Priority: !Ref 'Priority'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################
+# FrontEndDateTime resources
+####################
+  FrontEndDateTimeContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Fargate FrontEndDateTime containers
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+          # Allow access ONLY from ALB 
+          - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
+            # IpProtocol: -1
+            IpProtocol: tcp
+            FromPort: !Ref FrontEndDateTimeContainerPort
+            ToPort: !Ref FrontEndDateTimeContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
 
   # A log group for storing the stdout logs from this service's containers
   FrontEndDateTimeLogGroup:
@@ -481,18 +626,18 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref 'FrontEndDateTimeServiceName'
-      Cpu: !Ref 'FrontEndDateTimeContainerCpu'
-      Memory: !Ref 'FrontEndDateTimeContainerMemory'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
         - EC2
-      ExecutionRoleArn: !GetAtt 'FrontEndDateTimeECSTaskExecutionRole.Arn'
-      TaskRoleArn: !GetAtt 'FrontEndDateTimeECSTaskRole.Arn'
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
       ContainerDefinitions:
         - Name: !Ref 'FrontEndDateTimeServiceName'
-          Cpu: !Ref 'FrontEndDateTimeContainerCpu'
-          Memory: !Ref 'FrontEndDateTimeContainerMemory'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
           Image: !Ref 'FrontEndDateTimeImageUrl'
           # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontEndDateTimeECRRepositoryName}:latest
           PortMappings:
@@ -647,32 +792,6 @@ Resources:
             ToPort: !Ref BackEndGreetingContainerPort
             Description: !Sub Allow access ONLY from FrontEndDateTimeContainerSecurityGroup:${FrontEndDateTimeContainerSecurityGroup} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
 
-  # This is a role which is used by the ECS tasks themselves.
-  BackEndGreetingECSTaskExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: [ecs-tasks.amazonaws.com]
-          Action: ['sts:AssumeRole']
-      Path: /
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  BackEndGreetingECSTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: [ecs-tasks.amazonaws.com]
-          Action: ['sts:AssumeRole']
-      Path: /
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-
   # A log group for storing the stdout logs from this service's containers
   BackEndGreetingLogGroup:
     Type: AWS::Logs::LogGroup
@@ -685,20 +804,19 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref 'BackEndGreetingServiceName'
-      Cpu: !Ref 'BackEndGreetingContainerCpu'
-      Memory: !Ref 'BackEndGreetingContainerMemory'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
         - EC2
-      TaskRoleArn: !GetAtt 'BackEndGreetingECSTaskRole.Arn'
-      ExecutionRoleArn: !GetAtt 'BackEndGreetingECSTaskExecutionRole.Arn'
+      TaskRoleArn: !GetAtt 'PLMECSTaskRole.Arn'
+      ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionRole.Arn'
       ContainerDefinitions:
         - Name: !Ref 'BackEndGreetingServiceName'
-          Cpu: !Ref 'BackEndGreetingContainerCpu'
-          Memory: !Ref 'BackEndGreetingContainerMemory'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
           Image: !Ref 'BackEndGreetingImageUrl'
-          # Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackEndGreetingECRRepositoryName}:latest
           PortMappings:
             - ContainerPort: !Ref 'BackEndGreetingContainerPort'
               Protocol: tcp
@@ -855,11 +973,11 @@ Outputs:
       Name: !Sub ${EnvironmentName}:PLMEcsCluster
 
   # FrontEndDateTime
-  FrontEndDateTimeECSTaskExecutionRole:
+  PLMECSTaskExecutionRole:
     Description: The ARN of the ECS role
-    Value: !GetAtt 'FrontEndDateTimeECSTaskExecutionRole.Arn'
+    Value: !GetAtt 'PLMECSTaskExecutionRole.Arn'
     Export:
-      Name: !Sub ${EnvironmentName}:FrontEndDateTimeECSTaskExecutionRole
+      Name: !Sub ${EnvironmentName}:PLMECSTaskExecutionRole
   FrontEndDateTimeContainerSecurityGroup:
     Description: A security group used to allow Fargate containers to receive traffic
     Value: !Ref 'FrontEndDateTimeContainerSecurityGroup'
@@ -879,11 +997,11 @@ Outputs:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
   # BackEndGreeting
-  BackEndGreetingECSTaskExecutionRole:
+  PLMECSTaskExecutionRole:
     Description: The ARN of the ECS role
-    Value: !GetAtt 'BackEndGreetingECSTaskExecutionRole.Arn'
+    Value: !GetAtt 'PLMECSTaskExecutionRole.Arn'
     Export:
-      Name: !Sub ${EnvironmentName}:BackEndGreetingECSTaskExecutionRole
+      Name: !Sub ${EnvironmentName}:PLMECSTaskExecutionRole
   BackEndGreetingContainerSecurityGroup:
     Description: A security group used to allow Fargate containers to receive traffic
     Value: !Ref 'BackEndGreetingContainerSecurityGroup'
