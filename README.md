@@ -4,6 +4,10 @@ Lab to understand why ECS task are Stopped?
 
 ## 1. PLM1TaskStoppedByUser 
 Why the below task stopped in the ECS Service `PLM-ECS-PLM1TaskStoppedByUserECSService`, this caused an outage?
+- `022dec4fcd0944d0ab25969f9ab5d414`
+- `367b85e4cbd142158e7ac7dc435fa3d6`
+- `c102b84ee72d4dc5932ce029b403b81b`
+
 - `f4b2fb53fd724e8fa0b8d6986196b8d2`
 - `654177fd57884a0ba8908952b6ebed8c`
 
@@ -17,6 +21,10 @@ Why the below task stopped in the ECS Service `PLM-ECS-PLM2ServiceScalingEventTr
 
 ## 3. PLM2ServiceScalingEventTriggered 
 Why the below task stopped in the ECS Service `PLM-ECS-PLM2ServiceScalingEventTriggered`, this caused an outage as suddenly task stopped?
+- `16f15a592f054446904777ceaa81b345`
+-  `4f4fbb8250d94acea00205542c3f6951`
+-  `6e4de1f9a93c4441b0f54169af5906ca`
+
 - `1cc86b2eea9948f08eff56e76683b0c2`
 - `2d7fff8ddb9945e29d09b4feab1a1146`
 - `6cbecdfb846e40b7bf4a9d16dae74e8e`
