@@ -222,7 +222,6 @@ Resources:
   S3GatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      PrivateDnsEnabled: true
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       PolicyDocument:
         Version: "2012-10-17"
