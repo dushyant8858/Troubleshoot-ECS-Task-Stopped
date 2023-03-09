@@ -5,6 +5,7 @@ Lab to understand why ECS task are Stopped?
 ## 1. PLM1TaskStoppedByUser 
 Why the below task stopped in the ECS Service `PLM-ECS-PLM1TaskStoppedByUserECSService`, this caused an outage?
 - `f4b2fb53fd724e8fa0b8d6986196b8d2`
+- `654177fd57884a0ba8908952b6ebed8c`
 
 ## 2. PLM2ServiceScalingEventTriggered 
 Why the below task stopped in the ECS Service `PLM-ECS-PLM2ServiceScalingEventTriggered`, this caused an outage as suddenly task stopped?
@@ -35,3 +36,4 @@ Stopped reason Fetching secret data from SSM Parameter Store in us-west-2: Acces
 
 
 Stopped reason Fetching secret data from SSM Parameter Store in us-west-2: AccessDeniedException: User: arn:aws:sts::8XXXXXXXXX0:assumed-role/PLM-ECS-PLMECSTaskExecutionRole-1ELKRFLI7MRK8/ab31f3f626f2442da9bfb200c618e393 is not authorized to perform: ssm:GetParameters on resource: arn:aws:ssm:us-west-2:8XXXXXXXXX0:parameter/CFN-PLMSecretParameter-BlcjtHm1Fj7R because no VPC endpoint policy allows the ssm:GetParameters action status code: 400, request id: xx-214b-4704-ad1e-xx
+

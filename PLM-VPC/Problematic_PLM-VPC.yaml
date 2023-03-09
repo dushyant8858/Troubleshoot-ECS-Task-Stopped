@@ -164,6 +164,9 @@ Resources:
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-NatGatewayTwoAttachment
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -178,6 +181,9 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
       SubnetId: !Ref PublicSubnetTwo
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-NatGatewayTwo
   PrivateRouteTableOne:
     Type: AWS::EC2::RouteTable
     Properties:

@@ -1,5 +1,5 @@
-# aws cloudformation create-stack --template-body file://Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
-# aws cloudformation update-stack --template-body file://Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 
 # while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 
@@ -26,7 +26,7 @@ Parameters:
     Default: dushyant8858/traefik-whoami:latest
   ECSTaskDesiredCount:
     Type: Number
-    Default: 1
+    Default: 3
 
 # PLM1TaskStoppedByUser resources
   PLM1TaskStoppedByUserServiceName:
@@ -35,7 +35,7 @@ Parameters:
   PLM1TaskStoppedByUserContainerPort:
     Type: Number
     Default: '8001'
-    Description: What port number the application inside the docker container is binding to
+    Description: What port the application inside the container runs on
     
 # PLM2ServiceScalingEventTriggered service Parameters
   PLM2ServiceScalingEventTriggeredServiceName:
@@ -46,7 +46,7 @@ Parameters:
     Default: '8002'
   PLM2ServiceScalingEventTriggeredDesiredCount:
     Type: Number
-    Default: 1
+    Default: 10
 
 # PLM3UnhealthyContainerInstance service Parameters
   PLM3UnhealthyContainerInstanceServiceName:
@@ -147,7 +147,7 @@ Resources:
   PLMPublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the public facing load balancer
+      GroupDescription: Pub ALB
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
   PLMPublicLoadBalancerSGIngress:
@@ -163,7 +163,7 @@ Resources:
   PLMECSContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 PLMECSContainerSecurityGroup containers
+      GroupDescription: PLM SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
   PLMECSContainerSecurityGroupIngress:
@@ -228,7 +228,7 @@ Resources:
               Service: [ec2.amazonaws.com]
             Action: ['sts:AssumeRole']
       Path: /
-      ManagedPolicyArns: 
+      ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
   PLMEcsLaunchTemplate:
@@ -383,11 +383,12 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       MinSize: '1'
-      MaxSize: '4'
-      DesiredCapacity: '2'
+      MaxSize: '6'
+      DesiredCapacity: '6'
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: '1'
+        MaxBatchSize: '3'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -419,7 +420,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub ${EnvironmentName}-LogGroup
-      RetentionInDays: 7
+      RetentionInDays: 30
 
 ####################
 # PLM1TaskStoppedByUser resources
@@ -634,7 +635,7 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ] 
-      MinCapacity: 1
+      MinCapacity: 10
       MaxCapacity: 20
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
@@ -659,7 +660,7 @@ Resources:
   PLMECSContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 PLM3UnhealthyContainerInstance containers
+      GroupDescription: PLM3
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
@@ -1094,7 +1095,7 @@ Resources:
   FrontEndDateTimeContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 FrontEndDateTime containers
+      GroupDescription: FE SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
@@ -1217,7 +1218,7 @@ Resources:
   BackEndGreetingContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 BackEndGreeting containers
+      GroupDescription: BE SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:

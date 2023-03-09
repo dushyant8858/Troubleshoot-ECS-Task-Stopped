@@ -1,5 +1,5 @@
-# aws cloudformation create-stack --template-body file://Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
-# aws cloudformation update-stack --template-body file://Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Problematic_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Problematic_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
 
 # while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 
@@ -14,7 +14,7 @@ Parameters:
     Type: String
     Default: PLM
 
-# Common ECS Task/Contaienr Pameters
+# Common ECS Task/Contaienr
   ContainerCpu:
     Type: Number
     Default: 256
@@ -26,7 +26,7 @@ Parameters:
     Default: dushyant8858/traefik-whoami:latest
   ECSTaskDesiredCount:
     Type: Number
-    Default: 1
+    Default: 3
 
 # PLM1TaskStoppedByUser resources
   PLM1TaskStoppedByUserServiceName:
@@ -35,7 +35,6 @@ Parameters:
   PLM1TaskStoppedByUserContainerPort:
     Type: Number
     Default: '8001'
-    Description: What port number the application inside the docker container is binding to
     
 # PLM2ServiceScalingEventTriggered service Parameters
   PLM2ServiceScalingEventTriggeredServiceName:
@@ -46,7 +45,7 @@ Parameters:
     Default: '8002'
   PLM2ServiceScalingEventTriggeredDesiredCount:
     Type: Number
-    Default: 1
+    Default: 10
 
 # PLM3UnhealthyContainerInstance service Parameters
   PLM3UnhealthyContainerInstanceServiceName:
@@ -106,11 +105,9 @@ Parameters:
 
 # ALB Parameters 
   HostedZoneId:
-    Description: HostedZone ID
     Type: String
     Default: 'Z38JIISUVMYB2F'
   HostedZoneName:
-    Description: HostedZone Name
     Type: String
     Default: 'dubaria.myinstance.com'
   PLMPublicLoadBalancerSubDomainNameWithDot:
@@ -123,11 +120,9 @@ Parameters:
 
 # ASG / AutoScaling Parameters
   InstanceType:
-    Description: Type of EC2 instance to use
     Type: String
     AllowedValues:
       - c5.large
-    ConstraintDescription: Must be a size from t2 instance families
     Default: c5.large
 
 Mappings:
@@ -136,7 +131,6 @@ Mappings:
       Arch: X8664
   RegionAmiMap:
     us-west-2:
-      # aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-west-2 --query Parameters[].Value --output text
       X8664: ami-0ae546d2dd33d2039
 
 Resources:
@@ -147,7 +141,7 @@ Resources:
   PLMPublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the public facing load balancer
+      GroupDescription: Pub ALB
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
   PLMPublicLoadBalancerSGIngress:
@@ -158,12 +152,11 @@ Resources:
       IpProtocol: tcp
       FromPort: 80
       ToPort: 9999
-      Description: Allow access to ALB from ALL IP on port 80-9999
 
   PLMECSContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 PLMECSContainerSecurityGroup containers
+      GroupDescription: PLM SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
   PLMECSContainerSecurityGroupIngress:
@@ -175,7 +168,6 @@ Resources:
       # FromPort: 80
       # ToPort: 9999
       IpProtocol: -1
-      Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on ALL Port
 
   PLMPublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -383,11 +375,12 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       MinSize: '1'
-      MaxSize: '4'
-      DesiredCapacity: '2'
+      MaxSize: '6'
+      DesiredCapacity: '6'
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: '1'
+        MaxBatchSize: '3'
         WaitOnResourceSignals: true
         PauseTime: PT5M
     CreationPolicy:
@@ -403,14 +396,16 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
+        # - Effect: Allow
+        - Effect: Deny           # Prob 1      # Fix 1
           Principal:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
+        # - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 2      # Fix 2
+        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 2      # Fix 2
 
 ####################
 # AWS CloudWatch LogGroup resources
@@ -419,7 +414,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub ${EnvironmentName}-LogGroup
-      RetentionInDays: 7
+      RetentionInDays: 30
 
 ####################
 # PLM1TaskStoppedByUser resources
@@ -634,8 +629,10 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ] 
-      MinCapacity: 1
-      MaxCapacity: 20
+      # MinCapacity: 10 # Fix 3
+      # MaxCapacity: 20 # Fix 3
+      MinCapacity: 0  # Prob 3
+      MaxCapacity: 0  # Prob 3
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
   PLM2ServiceScalingEventTriggeredTargetTrackingScalingPolicy:
@@ -659,16 +656,14 @@ Resources:
   PLMECSContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 PLM3UnhealthyContainerInstance containers
+      GroupDescription: PLM3
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
-          # Allow access ONLY from ALB 
           - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
             IpProtocol: tcp
             FromPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
             ToPort: !Ref PLM3UnhealthyContainerInstanceContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM3UnhealthyContainerInstanceContainerPort}
 
   PLM3UnhealthyContainerInstanceTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -789,7 +784,8 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 4
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawss.com/${PLMImageUrl}'    # Prob 4
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp
@@ -882,7 +878,6 @@ Resources:
       # Name: PLM-Secret
       Type: String
       Value: "Yayyy!! I was able start my application my pulling all required secret/parameter to successfully boot and start my application - You PASSED this Test/Lab!!! of PLM5ResourceInitializationError Lab :)"
-      Description: Test PLM Secret Parameter PLM5ResourceInitializationError.
       Tags:
         Name: PLMSecretParameter
 
@@ -902,7 +897,8 @@ Resources:
         - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 5
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'       # Prob 5
           PortMappings:
             - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
               Protocol: tcp
@@ -914,11 +910,13 @@ Resources:
             #   Value: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Secrets:
             - Name: WHOAMI_NAME
-              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'
+              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 6
+              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'      # Prob 6
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Ref PLMLogGroup
+              # awslogs-group: !Ref PLMLogGroup   # Fix 7
+              awslogs-group: PLMLogGroup    # Prob 7
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM5ResourceInitializationErrorServiceName'
   PLM5ResourceInitializationErrorECSService:
@@ -1013,14 +1011,19 @@ Resources:
               Protocol: tcp
               HostPort: 0
           HealthCheck:
-            StartPeriod: 120
-            Command:
+            # StartPeriod: 120  # Fix 8
+            StartPeriod: 120    # Prob 8
+            Command:      # Prob 9       # Fix 9
+                # - "CMD-SHELL"
+                # - "curl --fail http://localhost/ || exit 1"
                 - "CMD-SHELL"
-                - "curl --fail http://localhost/ || exit 1"
-            Interval: 15
+                - "curl --fail https://localhost/ || exit 1"
+            # Interval: 15  # Fix 10
+            Interval: 15    # Prob 10
             Retries: 2
             Timeout: 3
-          EntryPoint: ["sh" , "-c"]
+          # EntryPoint: ["sh" , "-c"]   # Fix 11
+          EntryPoint: ["sh" , "c"]     # Prob 11
           Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
           LogConfiguration:
             LogDriver: 'awslogs'
@@ -1035,7 +1038,8 @@ Resources:
     Properties:
       Cluster: !Ref PLMEcsCluster
       LaunchType: EC2
-      HealthCheckGracePeriodSeconds: '600'
+      # HealthCheckGracePeriodSeconds: '300'  # Fix 12
+      HealthCheckGracePeriodSeconds: '60'    # Prob 12
       DeploymentConfiguration:
         MaximumPercent: '200'
         MinimumHealthyPercent: '100'
@@ -1049,8 +1053,10 @@ Resources:
   PLM6FailedContainerHealthChecksTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /
+      # HealthCheckIntervalSeconds: 15  # Fix 13
+      HealthCheckIntervalSeconds: 10   # Prob 13
+      # HealthCheckPath: /    # Fix 14
+      HealthCheckPath: /health  # Fix 14
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
@@ -1094,7 +1100,7 @@ Resources:
   FrontEndDateTimeContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 FrontEndDateTime containers
+      GroupDescription: FE SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
@@ -1103,7 +1109,6 @@ Resources:
             IpProtocol: tcp
             FromPort: !Ref FrontEndDateTimeContainerPort
             ToPort: !Ref FrontEndDateTimeContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
 
   FrontEndDateTimeTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -1130,8 +1135,9 @@ Resources:
             - Name: SERVER_PORT
               Value: !Ref 'FrontEndDateTimeContainerPort'
             - Name: REST_HOSTNAME
-              # backendgreeting.backendgreeting
-              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}
+              # # backendgreeting.backendgreeting
+              # Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}    # Fix 15
+              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}.PLM-Failing-Endpoint   # Prob 15
             - Name: REST_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
@@ -1173,8 +1179,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      # HealthCheckPath: /frontenddatetime/backendgreeting
-      HealthCheckPath: /frontenddatetime
+      # # HealthCheckPath Prob 17  Fix 17 
+      HealthCheckPath: /frontenddatetime/backendgreeting 
+      # HealthCheckPath: /frontenddatetime
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
@@ -1217,7 +1224,7 @@ Resources:
   BackEndGreetingContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the EC2 BackEndGreeting containers
+      GroupDescription: BE SG
       VpcId: 
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       SecurityGroupIngress:
@@ -1225,12 +1232,10 @@ Resources:
             IpProtocol: tcp
             FromPort: !Ref BackEndGreetingContainerPort
             ToPort: !Ref BackEndGreetingContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
-          - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
-            IpProtocol: tcp
-            FromPort: !Ref BackEndGreetingContainerPort
-            ToPort: !Ref BackEndGreetingContainerPort
-            Description: !Sub Allow access ONLY from FrontEndDateTimeContainerSecurityGroup:${FrontEndDateTimeContainerSecurityGroup} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
+          # - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
+          #   IpProtocol: tcp
+          #   FromPort: !Ref BackEndGreetingContainerPort
+          #   ToPort: !Ref BackEndGreetingContainerPort
 
   BackEndGreetingTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -1306,8 +1311,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      HealthCheckPath: /backendgreeting
-      HealthCheckProtocol: HTTP
+      # HealthCheckPath: /backendgreeting    # Fix 18
+      # HealthCheckProtocol: HTTP            # Fix 18
+      HealthCheckProtocol: HTTPS          # Prob 18
+      HealthCheckPath: /backendgreet      # Prob 18
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
@@ -1346,7 +1353,6 @@ Resources:
 
 Outputs:
   PLMEcsCluster:
-    Description: ECS cluster Name
     Value: !Ref 'PLMEcsCluster'
     Export:
       Name: !Sub ${EnvironmentName}:PLMEcsCluster
