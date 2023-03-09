@@ -322,7 +322,25 @@ Resources:
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
 
-
+  SsmApiInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: "*"
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
 
 
 

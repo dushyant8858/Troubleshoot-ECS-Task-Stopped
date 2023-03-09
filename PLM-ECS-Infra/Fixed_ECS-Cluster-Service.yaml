@@ -415,6 +415,7 @@ Resources:
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         
   # This is a role which is used by the ECS tasks themselves.
   PLMECSTaskRole:
@@ -897,6 +898,16 @@ Resources:
 ####################
 # PLM5ResourceInitializationError resources
 ####################
+  PLMSecretParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      # Name: PLM-Secret
+      Type: String
+      Value: "Yayyy!! I was able to pull the secret - Test PASSED!!! for PLM5ResourceInitializationError Lab :)"
+      Description: Test PLM Secret Parameter PLM5ResourceInitializationError.
+      Tags:
+        Name: PLMSecretParameter
+
   PLM5ResourceInitializationErrorTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -921,8 +932,11 @@ Resources:
           Environment: 
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
+            # - Name: WHOAMI_NAME
+            #   Value: !Ref 'PLM5ResourceInitializationErrorServiceName'
+          Secrets:
             - Name: WHOAMI_NAME
-              Value: !Ref 'PLM5ResourceInitializationErrorServiceName'          
+              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
