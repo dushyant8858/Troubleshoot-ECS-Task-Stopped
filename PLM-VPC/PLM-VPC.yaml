@@ -321,6 +321,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
 
   SsmApiInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -341,6 +342,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
 
 
 
