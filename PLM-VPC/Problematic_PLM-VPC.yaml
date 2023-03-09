@@ -275,6 +275,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
 
   EcrDkrInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -298,6 +299,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
 
   EcrApiInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -323,7 +325,7 @@ Resources:
         - !Ref AllInterfaceEndpointSecurityGroup
         - sg-0a96907a215dea8c9
 
-  SsmApiInterfaceEndpoint:
+  SsmInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
       PrivateDnsEnabled: true
@@ -344,6 +346,68 @@ Resources:
         - !Ref AllInterfaceEndpointSecurityGroup
         - sg-0a96907a215dea8c9
 
+  EcsAgentInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs-agent'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: "*"
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
+
+  EcsTelemetryInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs-telemetry'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: "*"
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
+
+  EcsInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: "*"
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+        - sg-0a96907a215dea8c9
 
 
 
