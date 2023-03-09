@@ -9,7 +9,7 @@
 
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS Fargate cluster that can span public and private subnets. Supports public facing load balancers, private internal load balancers, and both internal and external service discovery namespaces.
+Description: APLM Lab
 Parameters:
   EnvironmentName:
     Type: String
@@ -133,7 +133,8 @@ Resources:
     DependsOn: GatewayAttachement
     Properties:
       RouteTableId: !Ref 'PublicRouteTable'
-      DestinationCidrBlock: '0.0.0.0/0'
+      # DestinationCidrBlock: '0.0.0.0/0' # Fix 1
+      DestinationCidrBlock: '192.168.0.0/16'   # Prob 1
       GatewayId: !Ref 'InternetGateway'
   PublicSubnetOneRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -150,32 +151,33 @@ Resources:
   # in these subnets have only private IP addresses, and must use a NAT
   # gateway to talk to the internet. We launch two NAT gateways, one for
   # each private subnet.
-  NatGatewayOneAttachment:
+  NatGatewayOneAttachment1: # Prob 2
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
-  # NatGatewayTwoAttachment:
-  #   Type: AWS::EC2::EIP
-  #   DependsOn: GatewayAttachement
-  #   Properties:
-  #     Domain: vpc
+          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment1
+  NatGatewayTwoAttachment:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachement
+    Properties:
+      Domain: vpc
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
-      SubnetId: !Ref PublicSubnetOne
+      AllocationId: !GetAtt NatGatewayOneAttachment1.AllocationId # Prob 2
+      # SubnetId: !Ref PublicSubnetOne  # Fix 2
+      SubnetId: !Ref PrivateSubnetOne  # Prob 2
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-NatGatewayOne
-  # NatGatewayTwo:
-  #   Type: AWS::EC2::NatGateway
-  #   Properties:
-  #     AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
-  #     SubnetId: !Ref PublicSubnetTwo
+  NatGatewayTwo:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetTwo
   PrivateRouteTableOne:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -206,8 +208,8 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTableTwo
       DestinationCidrBlock: 0.0.0.0/0
-      # NatGatewayId: !Ref NatGatewayTwo
-      NatGatewayId: !Ref NatGatewayOne
+      NatGatewayId: !Ref NatGatewayTwo
+      # NatGatewayId: !Ref NatGatewayOne
   PrivateRouteTableTwoAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -226,7 +228,8 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          # - Effect: Allow # Fix 3
+          - Effect: Deny # Fix 3
             Action: "*"
             Principal: "*"
             Resource: "*"
@@ -252,20 +255,24 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
+      # FromPort: 443 # Fix 4
+      # ToPort: 443   # Fix 4
+      FromPort: 80    # Prob 4
+      ToPort: 80      # Prob 4
       Description: Allow Inbound access to the InterfaceEndpoint
 
   CWLogInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
-      PrivateDnsEnabled: true
+      # PrivateDnsEnabled: true # Fix 6
+      PrivateDnsEnabled: false # Prob 6
       VpcEndpointType: Interface
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          # - Effect: Allow # Fix 3
+          - Effect: Deny # Fix 3
             Action: "*"
             Principal: "*"
             Resource: "*"
@@ -289,8 +296,11 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken'
-            Resource: '*'
+              # - 'ecr:GetAuthorizationToken' # Fix 5
+              - 'ecr:GetAuthorizationToken' # Prob 5
+            # Resource: '*' # Fix 7 
+            Resource:
+              - !Sub 'arn:aws:ecr:us-east-2:${AWS::AccountId}:repository/dushyant8858/traefik-whoami'   # Prob 7 
             Effect: Allow
             Principal: '*'
       VpcId: !Ref VPC
@@ -313,7 +323,8 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken'
+              # - 'ecr:GetAuthorizationToken' # Fix 5
+              - 'ecr:GetAuthorizationToken' # Prob 5
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -322,13 +333,15 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
+        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
+        - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
         - sg-0a96907a215dea8c9
 
   SsmInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
-      PrivateDnsEnabled: true
+      # PrivateDnsEnabled: true # Fix 6
+      PrivateDnsEnabled: false # Prob 6
       VpcEndpointType: Interface
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
       PolicyDocument:
@@ -343,7 +356,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
+        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
+        - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
         - sg-0a96907a215dea8c9
 
   EcsAgentInterfaceEndpoint:
@@ -448,8 +462,8 @@ Outputs:
     Value: !Ref 'PrivateSubnetTwo'
     Export:
       Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
-  NatGatewayOneAttachment: 
+  NatGatewayOneAttachment1: 
     Description: NAT's EIP
-    Value: !Ref 'NatGatewayOneAttachment'
+    Value: !Ref 'NatGatewayOneAttachment1'
     Export:
-      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachment
+      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachment1
