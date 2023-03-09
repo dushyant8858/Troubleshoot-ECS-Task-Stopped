@@ -214,26 +214,121 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableTwo
       SubnetId: !Ref PrivateSubnetTwo
 
-  # # OPTIONAL: VPC Endpoint for DynamoDB
-  # # If a container needs to access DynamoDB this allows a container in the private subnet
-  # # to talk to DynamoDB directly without needing to go via the NAT gateway. This reduces
-  # # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
-  # # your other traffic.
-  # DynamoDBEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Action: "*"
-  #           Principal: "*"
-  #           Resource: "*"
-  #     RouteTableIds:
-  #       - !Ref 'PrivateRouteTableOne'
-  #       - !Ref 'PrivateRouteTableTwo'
-  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
-  #     VpcId: !Ref 'VPC'
+  # OPTIONAL: VPC Endpoint for S3
+  # If a container needs to access S3 this allows a container in the private subnet
+  # to talk to S3 directly without needing to go via the NAT gateway. This reduces
+  # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
+  # your other traffic.
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PublicRouteTable'
+        - !Ref 'PrivateRouteTableOne'
+        - !Ref 'PrivateRouteTableTwo'
+      VpcId: !Ref 'VPC'
+
+  AllInterfaceEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Inbound+Outbond access to the InterfaceEndpoint
+      VpcId: 
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-AllInterfaceEndpointSecurityGroup
+
+  AllInterfaceEndpointSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref AllInterfaceEndpointSecurityGroup
+      CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      Description: Allow Inbound access to the InterfaceEndpoint
+
+  CWLogInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+
+  EcrDkrInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'ecr:BatchGetImage'
+              - 'ecr:GetDownloadUrlForLayer'
+              - 'ecr:GetAuthorizationToken'
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+
+  EcrApiInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'ecr:BatchGetImage'
+              - 'ecr:GetDownloadUrlForLayer'
+              - 'ecr:GetAuthorizationToken'
+            Resource: '*'
+            Effect: Allow
+            Principal: '*'
+      VpcId: !Ref VPC
+      SubnetIds: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      SecurityGroupIds:
+        - !Ref AllInterfaceEndpointSecurityGroup
+
+
+
+
+
+
+
 
 
 # These are the values output by the CloudFormation template. Be careful

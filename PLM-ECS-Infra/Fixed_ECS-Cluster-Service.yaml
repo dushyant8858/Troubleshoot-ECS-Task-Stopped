@@ -810,7 +810,7 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLMImageUrl'
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp
@@ -913,7 +913,7 @@ Resources:
         - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLMImageUrl'
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'
           PortMappings:
             - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
               Protocol: tcp
