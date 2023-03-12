@@ -74,12 +74,12 @@ then
     done
     echo "############################## END :::PLM Lab 4::: ##############################"
 fi
-    # echo ""
-    # echo "################################################################################################"
-    # echo ":::PLM Lab 4::: Troubleshoot ECS Service: $PLM4CannotPullContainerErrorECSService_ECS_SERVICE_NAME"
-    # echo "################################################################################################"
-    # echo ""
+    echo ""
+    echo "################################################################################################"
+    echo ":::PLM Lab 4::: Troubleshoot ECS Service: $PLM4CannotPullContainerErrorECSService_ECS_SERVICE_NAME"
+    echo "################################################################################################"
+    echo ""
 
-    # echo "Whyyyyyyy my ECS Task in the ECS Service '$PLM4CannotPullContainerErrorECSService_ECS_SERVICE_NAME' is not running? My Website went DOWN due to this!"
+    echo "Whyyyyyyy my ECS Task in the ECS Service '$PLM4CannotPullContainerErrorECSService_ECS_SERVICE_NAME' is not running? My Website went DOWN due to this!"
 
-    # echo "############################## END :::PLM Lab 4::: ##############################"
+    echo "############################## END :::PLM Lab 4::: ##############################"
