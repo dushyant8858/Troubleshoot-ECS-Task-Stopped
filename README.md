@@ -99,6 +99,7 @@ d. Wait before the "PLM-VPC" CFN stack is `UPDATE_COMPLETE`
 while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
 ```
 
+## 4. PLM4CannotPullContainerErrorECSService
 7. Run below command and troublesoot Lab 4
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-4-script.sh
