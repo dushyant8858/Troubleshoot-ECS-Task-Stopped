@@ -26,6 +26,7 @@ aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-C
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-1-2-3-script.sh 
 ```
+## 1. PLM1TaskStoppedByUser 
 ```
 ################################################################################################
 :::PLM Lab 1::: Troubleshoot ECS Service: PLM-ECS-PLM1TaskStoppedByUserECSService-KAFp3WQml0sc
@@ -39,6 +40,8 @@ Whyyyyyyy my ECS Task 2b0e2dc7f1df490b82a8ceecd46a1bad was "STOPPED"? My Website
 Whyyyyyyy my ECS Task d86474f7756f4d6fa78582c4e462c993 was "STOPPED"? My Website went DOWN due to this!
 ############################## END :::PLM Lab 1::: ##############################
 ```
+
+## 2. PLM2ServiceScalingEventTriggered
 ```
 ################################################################################################
 :::PLM Lab 2::: Troubleshoot ECS Service: PLM-ECS-PLM2ServiceScalingEventTriggeredECSService-lYxppidP6pnt
@@ -59,6 +62,8 @@ Whyyyyyyy my ECS Task e26fad58b3084891b004dc728089387d was 'STOPPED'? My Website
 Whyyyyyyy my ECS Task fed4529fa849465989546ead2af3060b was 'STOPPED'? My Website went DOWN due to this!
 ############################## END :::PLM Lab 2::: ##############################
 ```
+
+## 3. PLM3UnhealthyContainerInstance
 ```
 ################################################################################################
 :::PLM Lab 3::: Troubleshoot ECS Service: PLM-ECS-PLM3UnhealthyContainerInstanceECSService-Y1jJi2UKBzjo
