@@ -105,13 +105,25 @@ while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-na
 sh PLM-ECS-Infra/PLM-ECS-Lab-4-script.sh
 ```
 ```
-"ECS deployment ecs-svc/2832022262920676204 in progress."
+"ECS deployment ecs-svc/3218299231915255212 in progress."
+Waiting... 30s
+Waiting... 25s
+Waiting... 20s
+Waiting... 15s
+Waiting... 10s
+Waiting... 5s
+Waiting... 0s DONE
 
 ################################################################################################
 :::PLM Lab 4::: Troubleshoot ECS Service: PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA
 ################################################################################################
 
-Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA' is not running? My Website went DOWN due to this!
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-6MVDIwxByE6W
+PLM4CannotPullContainerErrorECSService_ECS_SERVICE_NAME = PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA
+
+Whyyyyyyy my ECS Task 73749240bb6143bc8828784f5e421336 is NOT RUNNING? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task ebf9d46969c145debd9b9bd9e884621b is NOT RUNNING? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task faab2faa3c244d54b43cc42bcf9dd810 is NOT RUNNING? My Website went DOWN due to this!
 ############################## END :::PLM Lab 4::: ##############################
 ```
 

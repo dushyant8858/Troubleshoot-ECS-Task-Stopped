@@ -69,7 +69,7 @@ then
     do
         PLM4CannotPullContainerErrorECSService_ECS_TASK_ID=$(echo $PLM4CannotPullContainerErrorECSService_ECS_TASK_ARN | cut -d "/" -f 3)
         # echo ""   
-        echo "Whyyyyyyy my ECS Task $PLM4CannotPullContainerErrorECSService_ECS_TASK_ID was $TaskStatus? My Website went DOWN due to this!"
+        echo "Whyyyyyyy my ECS Task $PLM4CannotPullContainerErrorECSService_ECS_TASK_ID is "NOT RUNNING"? My Website went DOWN due to this!"
         # echo ""
     done
     echo "############################## END :::PLM Lab 4::: ##############################"
