@@ -79,19 +79,40 @@ Whyyyyyyy my ECS Task dbca3f26760b475ea4c47f57f2d31fdd is 'STOPPED' or 'shutting
 ```
 
 6. Lets further break the Networking and ECS Infrastruction to troubleshoot the Lab 4, 5, 6 and 7
-a. First Break Networking...
+
+a. Then Break ECS Infra...
 ```
-aws cloudformation update-stack --template-body file://PLM-VPC/Problematic_PLM-VPC.yaml --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-VPC --stack-name PLM-VPC
+aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
 ```
-b. Wait before the CFN stack is `UPDATE_COMPLETE`
+
+b. Wait before the "PLM-ECS" CFN stack is `UPDATE_COMPLETE`
 ```
 while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
 ```
-c. Then Break ECS Infra...
+
+c. First Break Networking...
+```
+aws cloudformation update-stack --template-body file://PLM-VPC/Problematic_PLM-VPC.yaml --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-VPC --stack-name PLM-VPC
+```
+d. Wait before the "PLM-VPC" CFN stack is `UPDATE_COMPLETE`
+```
+while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
 ```
 
+7. Run below command and troublesoot Lab 4
 ```
+sh PLM-ECS-Infra/PLM-ECS-Lab-4-script.sh
+```
+```
+"ECS deployment ecs-svc/2832022262920676204 in progress."
 
+################################################################################################
+:::PLM Lab 4::: Troubleshoot ECS Service: PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA
+################################################################################################
+
+Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA' is not running? My Website went DOWN due to this!
+############################## END :::PLM Lab 4::: ##############################
+```
 
 
 

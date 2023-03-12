@@ -1122,7 +1122,7 @@ Resources:
   FrontEndDateTimeECSService:
     Type: AWS::ECS::Service
     DependsOn: 
-      - BackEndGreetingECSService
+      # - BackEndGreetingECSService
       - FrontEndDateTimeLoadBalancerRule
       - PLMEcsASG
     Properties:
