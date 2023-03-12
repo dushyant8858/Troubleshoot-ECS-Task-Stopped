@@ -26,6 +26,7 @@ aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-C
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-1-2-3-script.sh 
 ```
+```
 ################################################################################################
 :::PLM Lab 1::: Troubleshoot ECS Service: PLM-ECS-PLM1TaskStoppedByUserECSService-KAFp3WQml0sc
 ################################################################################################
@@ -37,7 +38,8 @@ Whyyyyyyy my ECS Task 2a44eebd7b7e4b3dbb4f62aa8ac5bdff was "STOPPED"? My Website
 Whyyyyyyy my ECS Task 2b0e2dc7f1df490b82a8ceecd46a1bad was "STOPPED"? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task d86474f7756f4d6fa78582c4e462c993 was "STOPPED"? My Website went DOWN due to this!
 ############################## END :::PLM Lab 1::: ##############################
-
+```
+```
 ################################################################################################
 :::PLM Lab 2::: Troubleshoot ECS Service: PLM-ECS-PLM2ServiceScalingEventTriggeredECSService-lYxppidP6pnt
 ################################################################################################
@@ -56,7 +58,8 @@ Whyyyyyyy my ECS Task d81b0cf2d308457fb61a7e2e886c5a82 was 'STOPPED'? My Website
 Whyyyyyyy my ECS Task e26fad58b3084891b004dc728089387d was 'STOPPED'? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task fed4529fa849465989546ead2af3060b was 'STOPPED'? My Website went DOWN due to this!
 ############################## END :::PLM Lab 2::: ##############################
-
+```
+```
 ################################################################################################
 :::PLM Lab 3::: Troubleshoot ECS Service: PLM-ECS-PLM3UnhealthyContainerInstanceECSService-Y1jJi2UKBzjo
 ################################################################################################
@@ -68,7 +71,7 @@ Whyyyyyyy my ECS Task 8c2135886a5643b8be4becc53d92af03 is 'STOPPED' or 'shutting
 Whyyyyyyy my ECS Task a20608fdce5d431ea7504b06d54d4bef is 'STOPPED' or 'shutting-down'? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task dbca3f26760b475ea4c47f57f2d31fdd is 'STOPPED' or 'shutting-down'? My Website went DOWN due to this!
 ############################## END :::PLM Lab 3::: ##############################
-
+```
 
 
 
