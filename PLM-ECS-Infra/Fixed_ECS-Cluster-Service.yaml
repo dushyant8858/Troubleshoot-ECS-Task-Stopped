@@ -79,35 +79,35 @@ Parameters:
     Type: Number
     Default: '80'
 
-# PLM7FrontEndDateTime = DateTim
-# PLM7FrontEndDateTime Service Parameters 
-  PLM7FrontEndDateTimeServiceName:
+# FrontEndDateTime = DateTim
+# FrontEndDateTime Service Parameters 
+  FrontEndDateTimeServiceName:
     Type: String
-    Default: PLM7FrontEndDateTime
-  PLM7FrontEndDateTimeImageUrl:
+    Default: FrontEndDateTime
+  FrontEndDateTimeImageUrl:
     Type: String
     Default: dushyant8858/frontenddatetime:latest
-  PLM7FrontEndDateTimeContainerPort:
+  FrontEndDateTimeContainerPort:
     Type: Number
     Default: '80'
 
-# PLM7BackEndGreeting = BackEndGreeting
-# PLM7BackEndGreeting Service Parameters 
-  PLM7BackEndGreetingServiceName:
+# BackEndGreeting = BackEndGreeting
+# BackEndGreeting Service Parameters 
+  BackEndGreetingServiceName:
     Type: String
-    Default: PLM7BackEndGreeting
-  PLM7BackEndGreetingImageUrl:
+    Default: BackEndGreeting
+  BackEndGreetingImageUrl:
     Type: String
     # Default: traefik/whoami:latest
     Default: dushyant8858/backendgreeting:latest
-  PLM7BackEndGreetingContainerPort:
+  BackEndGreetingContainerPort:
     Type: Number
     Default: '8080'
 
 # Service Discovery Parameters 
-  DomainPLM7BackEndGreetingPrivateServiceDiscoveryNamespace:
+  DomainBackEndGreetingPrivateServiceDiscoveryNamespace:
     Type: String
-    Default: PLM7BackEndGreeting
+    Default: BackEndGreeting
 
 # ASG / AutoScaling Parameters
   InstanceType:
@@ -179,7 +179,7 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       SecurityGroups: [!Ref 'PLMPublicLoadBalancerSG']
 
-  PLM7BackEndGreetingPrivateServiceDiscoveryNamespace:
+  BackEndGreetingPrivateServiceDiscoveryNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
       Name: !Ref DomainBackEndGreetingPrivateServiceDiscoveryNamespace
@@ -1067,9 +1067,9 @@ Resources:
       Priority: 1
 
 ####################
-# PLM7FrontEndDateTime resources
+# FrontEndDateTime resources
 ####################
-  PLM7FrontEndDateTimeContainerSecurityGroup:
+  FrontEndDateTimeContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: FE SG
@@ -1079,14 +1079,14 @@ Resources:
           # Allow access ONLY from ALB 
           - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
             IpProtocol: tcp
-            FromPort: !Ref PLM7FrontEndDateTimeContainerPort
-            ToPort: !Ref PLM7FrontEndDateTimeContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${PLM7FrontEndDateTimeContainerPort}
+            FromPort: !Ref FrontEndDateTimeContainerPort
+            ToPort: !Ref FrontEndDateTimeContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on Port:${FrontEndDateTimeContainerPort}
 
-  PLM7FrontEndDateTimeTaskDefinition:
+  FrontEndDateTimeTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Ref 'PLM7FrontEndDateTimeServiceName'
+      Family: !Ref 'FrontEndDateTimeServiceName'
       Cpu: !Ref 'ContainerCpu'
       Memory: !Ref 'ContainerMemory'
       NetworkMode: awsvpc
@@ -1096,17 +1096,17 @@ Resources:
       ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionAndTaskRole.Arn'
       TaskRoleArn: !GetAtt 'PLMECSTaskExecutionAndTaskRole.Arn'
       ContainerDefinitions:
-        - Name: !Ref 'PLM7FrontEndDateTimeServiceName'
+        - Name: !Ref 'FrontEndDateTimeServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLM7FrontEndDateTimeImageUrl'
+          Image: !Ref 'FrontEndDateTimeImageUrl'
           PortMappings:
-            - ContainerPort: !Ref 'PLM7FrontEndDateTimeContainerPort'
+            - ContainerPort: !Ref 'FrontEndDateTimeContainerPort'
               Protocol: tcp
-              HostPort: !Ref 'PLM7FrontEndDateTimeContainerPort'
+              HostPort: !Ref 'FrontEndDateTimeContainerPort'
           Environment: 
             - Name: SERVER_PORT
-              Value: !Ref 'PLM7FrontEndDateTimeContainerPort'
+              Value: !Ref 'FrontEndDateTimeContainerPort'
             - Name: REST_HOSTNAME
               # backendgreeting.backendgreeting
               Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}
@@ -1117,13 +1117,13 @@ Resources:
             Options:
               awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: !Ref 'PLM7FrontEndDateTimeServiceName'
+              awslogs-stream-prefix: !Ref 'FrontEndDateTimeServiceName'
 
-  PLM7FrontEndDateTimeECSService:
+  FrontEndDateTimeECSService:
     Type: AWS::ECS::Service
     DependsOn: 
       - BackEndGreetingECSService
-      - PLM7FrontEndDateTimeLoadBalancerRule
+      - FrontEndDateTimeLoadBalancerRule
       - PLMEcsASG
     Properties:
       Cluster: !Ref PLMEcsCluster
@@ -1137,17 +1137,17 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
           SecurityGroups: 
-            - !Ref PLM7FrontEndDateTimeContainerSecurityGroup
+            - !Ref FrontEndDateTimeContainerSecurityGroup
           Subnets:
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
-      TaskDefinition: !Ref 'PLM7FrontEndDateTimeTaskDefinition'
+      TaskDefinition: !Ref 'FrontEndDateTimeTaskDefinition'
       LoadBalancers:
-        - ContainerName: !Ref 'PLM7FrontEndDateTimeServiceName'
-          ContainerPort: !Ref PLM7FrontEndDateTimeContainerPort
-          TargetGroupArn: !Ref 'PLM7FrontEndDateTimeTargetGroup'
+        - ContainerName: !Ref 'FrontEndDateTimeServiceName'
+          ContainerPort: !Ref FrontEndDateTimeContainerPort
+          TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
 
-  PLM7FrontEndDateTimeTargetGroup:
+  FrontEndDateTimeTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
@@ -1157,7 +1157,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
-      Port: !Ref 'PLM7FrontEndDateTimeContainerPort'
+      Port: !Ref 'FrontEndDateTimeContainerPort'
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId:
@@ -1166,33 +1166,33 @@ Resources:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
 
-  PLM7FrontEndDateTimePublicLoadBalancerListener:
+  FrontEndDateTimePublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: PLMPublicLoadBalancer
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref 'PLM7FrontEndDateTimeTargetGroup'
+        - TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
           Type: 'forward'
       LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
-      Port: !Ref PLM7FrontEndDateTimeContainerPort
+      Port: !Ref FrontEndDateTimeContainerPort
       Protocol: HTTP
 
-  PLM7FrontEndDateTimeLoadBalancerRule:
+  FrontEndDateTimeLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
-        - TargetGroupArn: !Ref 'PLM7FrontEndDateTimeTargetGroup'
+        - TargetGroupArn: !Ref 'FrontEndDateTimeTargetGroup'
           Type: 'forward'
       Conditions:
         - Field: path-pattern
           Values: ['*']
-      ListenerArn: !Ref PLM7FrontEndDateTimePublicLoadBalancerListener
+      ListenerArn: !Ref FrontEndDateTimePublicLoadBalancerListener
       Priority: 1
 
 #################### 
 # BackEndGreeting resources
 #################### 
-  PLM7BackEndGreetingContainerSecurityGroup:
+  BackEndGreetingContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: BE SG
@@ -1201,19 +1201,19 @@ Resources:
       SecurityGroupIngress:
           - SourceSecurityGroupId: !Ref PLMPublicLoadBalancerSG
             IpProtocol: tcp
-            FromPort: !Ref PLM7BackEndGreetingContainerPort
-            ToPort: !Ref PLM7BackEndGreetingContainerPort
-            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on PLM7BackEndGreetingContainerPort:${PLM7BackEndGreetingContainerPort}
-          - SourceSecurityGroupId: !Ref PLM7FrontEndDateTimeContainerSecurityGroup
+            FromPort: !Ref BackEndGreetingContainerPort
+            ToPort: !Ref BackEndGreetingContainerPort
+            Description: !Sub Allow access ONLY from ALB:${PLMPublicLoadBalancer.LoadBalancerName} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
+          - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
             IpProtocol: tcp
-            FromPort: !Ref PLM7BackEndGreetingContainerPort
-            ToPort: !Ref PLM7BackEndGreetingContainerPort
-            Description: !Sub Allow access ONLY from PLM7FrontEndDateTimeContainerSecurityGroup:${PLM7FrontEndDateTimeContainerSecurityGroup} on PLM7BackEndGreetingContainerPort:${PLM7BackEndGreetingContainerPort}
+            FromPort: !Ref BackEndGreetingContainerPort
+            ToPort: !Ref BackEndGreetingContainerPort
+            Description: !Sub Allow access ONLY from FrontEndDateTimeContainerSecurityGroup:${FrontEndDateTimeContainerSecurityGroup} on BackEndGreetingContainerPort:${BackEndGreetingContainerPort}
 
-  PLM7BackEndGreetingTaskDefinition:
+  BackEndGreetingTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Ref 'PLM7BackEndGreetingServiceName'
+      Family: !Ref 'BackEndGreetingServiceName'
       Cpu: !Ref 'ContainerCpu'
       Memory: !Ref 'ContainerMemory'
       NetworkMode: awsvpc
@@ -1223,28 +1223,28 @@ Resources:
       TaskRoleArn: !GetAtt 'PLMECSTaskExecutionAndTaskRole.Arn'
       ExecutionRoleArn: !GetAtt 'PLMECSTaskExecutionAndTaskRole.Arn'
       ContainerDefinitions:
-        - Name: !Ref 'PLM7BackEndGreetingServiceName'
+        - Name: !Ref 'BackEndGreetingServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Ref 'PLM7BackEndGreetingImageUrl'
+          Image: !Ref 'BackEndGreetingImageUrl'
           PortMappings:
-            - ContainerPort: !Ref 'PLM7BackEndGreetingContainerPort'
+            - ContainerPort: !Ref 'BackEndGreetingContainerPort'
               Protocol: tcp
-              HostPort: !Ref 'PLM7BackEndGreetingContainerPort'
+              HostPort: !Ref 'BackEndGreetingContainerPort'
           Environment: 
             - Name: SERVER_PORT
-              Value: !Ref 'PLM7BackEndGreetingContainerPort'
+              Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
               awslogs-group: !Ref PLMLogGroup
               awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: !Ref 'PLM7BackEndGreetingServiceName'
+              awslogs-stream-prefix: !Ref 'BackEndGreetingServiceName'
 
-  PLM7BackEndGreetingECSService:
+  BackEndGreetingECSService:
     Type: AWS::ECS::Service
     DependsOn: 
-      - PLM7BackEndGreetingLoadBalancerRule
+      - BackEndGreetingLoadBalancerRule
       - PLMEcsASG
     Properties:
       Cluster: !Ref PLMEcsCluster
@@ -1258,29 +1258,29 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
           SecurityGroups: 
-            - !Ref PLM7BackEndGreetingContainerSecurityGroup
+            - !Ref BackEndGreetingContainerSecurityGroup
           Subnets:
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
-      TaskDefinition: !Ref 'PLM7BackEndGreetingTaskDefinition'
+      TaskDefinition: !Ref 'BackEndGreetingTaskDefinition'
       LoadBalancers:
-        - ContainerName: !Ref 'PLM7BackEndGreetingServiceName'
-          ContainerPort: !Ref PLM7BackEndGreetingContainerPort
-          TargetGroupArn: !Ref 'PLM7BackEndGreetingTargetGroup'
+        - ContainerName: !Ref 'BackEndGreetingServiceName'
+          ContainerPort: !Ref BackEndGreetingContainerPort
+          TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
       ServiceRegistries:
-        - RegistryArn: !GetAtt PLM7BackEndGreetingServiceDiscoveryService.Arn
+        - RegistryArn: !GetAtt BackEndGreetingServiceDiscoveryService.Arn
 
-  PLM7BackEndGreetingServiceDiscoveryService:
+  BackEndGreetingServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties:
-      Name: !Ref PLM7BackEndGreetingServiceName
+      Name: !Ref BackEndGreetingServiceName
       DnsConfig:
         DnsRecords: [{Type: A, TTL: "30"}]
-        NamespaceId: !Ref PLM7BackEndGreetingPrivateServiceDiscoveryNamespace
+        NamespaceId: !Ref BackEndGreetingPrivateServiceDiscoveryNamespace
       HealthCheckCustomConfig:
         FailureThreshold: 1
 
-  PLM7BackEndGreetingTargetGroup:
+  BackEndGreetingTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
@@ -1289,7 +1289,7 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
-      Port: !Ref 'PLM7BackEndGreetingContainerPort'
+      Port: !Ref 'BackEndGreetingContainerPort'
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId:
@@ -1298,27 +1298,27 @@ Resources:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
 
-  PLM7BackEndGreetingPublicLoadBalancerListener:
+  BackEndGreetingPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: PLMPublicLoadBalancer
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref 'PLM7BackEndGreetingTargetGroup'
+        - TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
           Type: 'forward'
       LoadBalancerArn: !Ref 'PLMPublicLoadBalancer'
-      Port: !Ref PLM7BackEndGreetingContainerPort
+      Port: !Ref BackEndGreetingContainerPort
       Protocol: HTTP
 
-  PLM7BackEndGreetingLoadBalancerRule:
+  BackEndGreetingLoadBalancerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
-        - TargetGroupArn: !Ref 'PLM7BackEndGreetingTargetGroup'
+        - TargetGroupArn: !Ref 'BackEndGreetingTargetGroup'
           Type: 'forward'
       Conditions:
         - Field: path-pattern
           Values: ['*']
-      ListenerArn: !Ref PLM7BackEndGreetingPublicLoadBalancerListener
+      ListenerArn: !Ref BackEndGreetingPublicLoadBalancerListener
       Priority: 1
 
 
@@ -1354,17 +1354,17 @@ Outputs:
     Export:
       Name: !Sub ${EnvironmentName}:PLM6FailedContainerHealthChecksExternalUrl
 
-  PLM7FrontEndDateTimeExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM7FrontEndDateTimeContainerPort}/frontenddatetime
+  FrontEndDateTimeExternalUrl:
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime
     Export:
-      Name: !Sub ${EnvironmentName}:PLM7FrontEndDateTimeExternalUrl
+      Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
-  PLM7BackEndGreetingExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM7BackEndGreetingContainerPort}/backendgreeting
+  BackEndGreetingExternalUrl:
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/backendgreeting
     Export:
-      Name: !Sub ${EnvironmentName}:PLM7BackEndGreetingExternalUrl
+      Name: !Sub ${EnvironmentName}:BackEndGreetingExternalUrl
   
-  PLM7FrontEndDateTimePLM7BackEndGreetingExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM7FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
+  FrontEndDateTimeBackEndGreetingExternalUrl:
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
     Export:
-      Name: !Sub ${EnvironmentName}:PLM7FrontEndDateTimePLM7BackEndGreetingExternalUrl
+      Name: !Sub ${EnvironmentName}:FrontEndDateTimeBackEndGreetingExternalUrl
