@@ -29,19 +29,19 @@ aws ecs update-service \
     --region $REGION \
     --query service.deployments[0].rolloutStateReason
 
-# echo "Waiting... 30s"
-# sleep 5
-# echo "Waiting... 25s"
-# sleep 5
-# echo "Waiting... 20s"
-# sleep 5
-# echo "Waiting... 15s"
-# sleep 5
-# echo "Waiting... 10s"
-# sleep 5
-# echo "Waiting... 5s"
-# sleep 5
-# echo "Waiting... 0s DONE"
+echo "Waiting... 30s"
+sleep 5
+echo "Waiting... 25s"
+sleep 5
+echo "Waiting... 20s"
+sleep 5
+echo "Waiting... 15s"
+sleep 5
+echo "Waiting... 10s"
+sleep 5
+echo "Waiting... 5s"
+sleep 5
+echo "Waiting... 0s DONE"
 
 
 PLM4CannotPullContainerErrorECSService_ECS_TASK_ARNs=$(aws ecs list-tasks \
