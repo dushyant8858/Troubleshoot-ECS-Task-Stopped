@@ -151,14 +151,14 @@ Resources:
   # in these subnets have only private IP addresses, and must use a NAT
   # gateway to talk to the internet. We launch two NAT gateways, one for
   # each private subnet.
-  NatGatewayOneAttachment1: # Prob 2
+  NatGatewayOneAttachmentBAD: # Prob 2
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment1
+          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
   NatGatewayTwoAttachment:
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
@@ -170,7 +170,7 @@ Resources:
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt NatGatewayOneAttachment1.AllocationId # Prob 2
+      AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId # Prob 2
       # SubnetId: !Ref PublicSubnetOne  # Fix 2
       SubnetId: !Ref PrivateSubnetOne  # Prob 2
       Tags:
@@ -249,8 +249,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Inbound+Outbond access to the InterfaceEndpoint
-      VpcId: 
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      VpcId: !Ref 'VPC'
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-AllInterfaceEndpointSecurityGroup
@@ -261,10 +260,10 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      # FromPort: 443 # Fix 4
-      # ToPort: 443   # Fix 4
-      FromPort: 80    # Prob 4
-      ToPort: 80      # Prob 4
+      FromPort: 443 # Fix 4
+      ToPort: 443   # Fix 4
+      # FromPort: 80    # Prob 4
+      # ToPort: 80      # Prob 4
       Description: Allow Inbound access to the InterfaceEndpoint
 
   CWLogInterfaceEndpoint:
@@ -468,8 +467,8 @@ Outputs:
     Value: !Ref 'PrivateSubnetTwo'
     Export:
       Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
-  NatGatewayOneAttachment1: 
+  NatGatewayOneAttachmentBAD: 
     Description: NAT's EIP
-    Value: !Ref 'NatGatewayOneAttachment1'
+    Value: !Ref 'NatGatewayOneAttachmentBAD'
     Export:
-      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachment1
+      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachmentBAD

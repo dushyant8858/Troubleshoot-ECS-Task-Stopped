@@ -2,6 +2,77 @@ Why my ECS task Stopped?
 ===
 Lab to understand why ECS task are Stopped?
 
+1. Clone this repository on your local machine
+```
+git clone https://github.com/dushyant8858/Troubleshoot-ECS-Task-Stopped.git
+
+cd Troubleshoot-ECS-Task-Stopped
+ls -l
+```
+
+2. Make sure you have AWS CLI installed if not follow [Installing or updating the latest version of the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+3. Deploy the networking required to perform the lab
+```
+aws cloudformation create-stack --template-body file://PLM-VPC/Fixed_PLM-VPC.yaml --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-VPC --stack-name PLM-VPC
+```
+
+4. Deploy ECS Infra
+```
+aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
+```
+
+5. Time to break the ECS environment to troubleshoot Lab 1, 2 and 3  
+```
+sh PLM-ECS-Infra/PLM-ECS-Lab-1-2-3-script.sh 
+```
+################################################################################################
+:::PLM Lab 1::: Troubleshoot ECS Service: PLM-ECS-PLM1TaskStoppedByUserECSService-KAFp3WQml0sc
+################################################################################################
+
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-9nwxPSs3hmRM
+PLM1TaskStoppedByUserECSService_ECS_SERVICE_NAME = PLM-ECS-PLM1TaskStoppedByUserECSService-KAFp3WQml0sc
+
+Whyyyyyyy my ECS Task 2a44eebd7b7e4b3dbb4f62aa8ac5bdff was "STOPPED"? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 2b0e2dc7f1df490b82a8ceecd46a1bad was "STOPPED"? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task d86474f7756f4d6fa78582c4e462c993 was "STOPPED"? My Website went DOWN due to this!
+############################## END :::PLM Lab 1::: ##############################
+
+################################################################################################
+:::PLM Lab 2::: Troubleshoot ECS Service: PLM-ECS-PLM2ServiceScalingEventTriggeredECSService-lYxppidP6pnt
+################################################################################################
+
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-9nwxPSs3hmRM
+PLM2ServiceScalingEventTriggeredECSService_ECS_SERVICE_NAME = PLM-ECS-PLM2ServiceScalingEventTriggeredECSService-lYxppidP6pnt
+
+Whyyyyyyy my ECS Task 15cfbc2fa0224c83bd191d8ced806932 was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 16d4ce62cf544abd9c4645060ac30ab3 was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 3334b9d36d2d49ada744f4adddc60619 was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 64bc35c831f6424eb5afea419ea36e1a was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 7bc6008d30df4cf9bad0f7027e12e70a was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 7ca81da079ac4c4bafefbcf7d60c802f was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 9444a2c6ce6c4ac58616e575be33bdc4 was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task d81b0cf2d308457fb61a7e2e886c5a82 was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task e26fad58b3084891b004dc728089387d was 'STOPPED'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task fed4529fa849465989546ead2af3060b was 'STOPPED'? My Website went DOWN due to this!
+############################## END :::PLM Lab 2::: ##############################
+
+################################################################################################
+:::PLM Lab 3::: Troubleshoot ECS Service: PLM-ECS-PLM3UnhealthyContainerInstanceECSService-Y1jJi2UKBzjo
+################################################################################################
+
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-9nwxPSs3hmRM
+PLM3UnhealthyContainerInstanceECSService_ECS_SERVICE_NAME = PLM-ECS-PLM3UnhealthyContainerInstanceECSService-Y1jJi2UKBzjo
+
+Whyyyyyyy my ECS Task 8c2135886a5643b8be4becc53d92af03 is 'STOPPED' or 'shutting-down'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task a20608fdce5d431ea7504b06d54d4bef is 'STOPPED' or 'shutting-down'? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task dbca3f26760b475ea4c47f57f2d31fdd is 'STOPPED' or 'shutting-down'? My Website went DOWN due to this!
+############################## END :::PLM Lab 3::: ##############################
+
+
+
+
+
 ## 1. PLM1TaskStoppedByUser 
 Why the below task stopped in the ECS Service `PLM-ECS-PLM1TaskStoppedByUserECSService`, this caused an outage?
 - `022dec4fcd0944d0ab25969f9ab5d414`

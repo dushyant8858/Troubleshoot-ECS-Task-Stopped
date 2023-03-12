@@ -1,5 +1,5 @@
-# aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
-# aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS Key=auto-delete,Value=no --stack-name PLM-ECS
+# aws cloudformation create-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
+# aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
 
 # while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 
@@ -104,19 +104,7 @@ Parameters:
     Type: Number
     Default: '8080'
 
-# ALB Parameters 
-  HostedZoneId:
-    Description: HostedZone ID
-    Type: String
-    Default: 'Z38JIISUVMYB2F'
-  HostedZoneName:
-    Description: HostedZone Name
-    Type: String
-    Default: 'dubaria.myinstance.com'
-  PLMPublicLoadBalancerSubDomainNameWithDot:
-    Type: String
-    Default: 'PLM.'
-
+# Service Discovery Parameters 
   DomainBackEndGreetingPrivateServiceDiscoveryNamespace:
     Type: String
     Default: BackEndGreeting
@@ -190,18 +178,6 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       SecurityGroups: [!Ref 'PLMPublicLoadBalancerSG']
-  PLMPublicLoadBalancerRecordSet:
-    Type: 'AWS::Route53::RecordSet'
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Sub
-        - '${PLMPublicLoadBalancerSubDomainNameWithDot}${HostedZoneName}'
-        - SubDomainNameWithDot: !Ref PLMPublicLoadBalancerSubDomainNameWithDot
-          HostedZoneName: !Ref HostedZoneName
-      ResourceRecords:
-        - !GetAtt 'PLMPublicLoadBalancer.DNSName'
-      TTL: 300
-      Type: CNAME
 
   BackEndGreetingPrivateServiceDiscoveryNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
@@ -231,6 +207,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonSSMPatchAssociation
   PLMEcsLaunchTemplate:
     Type: 'AWS::EC2::LaunchTemplate'
     Metadata:
@@ -1353,41 +1330,41 @@ Outputs:
       Name: !Sub ${EnvironmentName}:PLMEcsCluster
 
   PLM1TaskStoppedByUserExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${PLM1TaskStoppedByUserContainerPort}/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM1TaskStoppedByUserContainerPort}/
     Export:
       Name: !Sub ${EnvironmentName}:PLM1TaskStoppedByUserExternalUrl
   PLM2ServiceScalingEventTriggeredExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${PLM2ServiceScalingEventTriggeredContainerPort}/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM2ServiceScalingEventTriggeredContainerPort}/
     Export:
       Name: !Sub ${EnvironmentName}:PLM2ServiceScalingEventTriggeredExternalUrl
   PLM3UnhealthyContainerInstanceExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${PLM3UnhealthyContainerInstanceContainerPort}/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM3UnhealthyContainerInstanceContainerPort}/
     Export:
       Name: !Sub ${EnvironmentName}:PLM3UnhealthyContainerInstanceExternalUrl
   PLM4CannotPullContainerErrorExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${PLM4CannotPullContainerErrorContainerPort}/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM4CannotPullContainerErrorContainerPort}/
     Export:
       Name: !Sub ${EnvironmentName}:PLM4CannotPullContainerErrorExternalUrl
   PLM5ResourceInitializationErrorExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${PLM5ResourceInitializationErrorContainerPort}/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${PLM5ResourceInitializationErrorContainerPort}/
     Export:
       Name: !Sub ${EnvironmentName}:PLM5ResourceInitializationErrorExternalUrl
   PLM6FailedContainerHealthChecksExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:8006/
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:8006/
     Export:
       Name: !Sub ${EnvironmentName}:PLM6FailedContainerHealthChecksExternalUrl
 
   FrontEndDateTimeExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeExternalUrl
 
   BackEndGreetingExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${BackEndGreetingContainerPort}/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${BackEndGreetingContainerPort}/backendgreeting
     Export:
       Name: !Sub ${EnvironmentName}:BackEndGreetingExternalUrl
   
   FrontEndDateTimeBackEndGreetingExternalUrl:
-    Value: !Sub http://${PLMPublicLoadBalancerRecordSet}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
+    Value: !Sub http://${PLMPublicLoadBalancer.DNSName}:${FrontEndDateTimeContainerPort}/frontenddatetime/backendgreeting
     Export:
       Name: !Sub ${EnvironmentName}:FrontEndDateTimeBackEndGreetingExternalUrl
