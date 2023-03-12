@@ -259,10 +259,10 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      FromPort: 443 # Fix 4
-      ToPort: 443   # Fix 4
-      # FromPort: 80    # Prob 4
-      # ToPort: 80      # Prob 4
+      # FromPort: 443 # Fix 4
+      # ToPort: 443   # Fix 4
+      FromPort: 80    # Prob 4
+      ToPort: 80      # Prob 4
       Description: Allow Inbound access to the InterfaceEndpoint
 
   DefaultInterfaceEndpointSecurityGroup:
@@ -301,7 +301,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
+        # - !Ref AllInterfaceEndpointSecurityGroup
         - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcrDkrInterfaceEndpoint:
@@ -316,8 +316,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              # - 'ecr:GetAuthorizationToken' # Fix 5
-              - 'ecr:GetAuthorizationToken' # Prob 5
+              # - 'ecr:GetAuthorizationToken' # Fix 5  # Prob 5
             # Resource: '*' # Fix 7 
             Resource:
               - !Sub 'arn:aws:ecr:us-east-2:${AWS::AccountId}:repository/dushyant8858/traefik-whoami'   # Prob 7 
@@ -343,8 +342,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              # - 'ecr:GetAuthorizationToken' # Fix 5
-              - 'ecr:GetAuthorizationToken' # Prob 5
+              # - 'ecr:GetAuthorizationToken' # Fix 5  # Prob 5
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -354,14 +352,12 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
-        - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
-        - !Ref DefaultInterfaceEndpointSecurityGroup
+        - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6
 
   SsmInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
-      # PrivateDnsEnabled: true # Fix 6
-      PrivateDnsEnabled: false # Prob 6
+      PrivateDnsEnabled: true
       VpcEndpointType: Interface
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
       PolicyDocument:
@@ -376,8 +372,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
-        - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
+        - !Ref AllInterfaceEndpointSecurityGroup
         - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsAgentInterfaceEndpoint:
@@ -440,8 +435,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
-        - !Ref DefaultInterfaceEndpointSecurityGroup
+        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
+        - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6
 
 
 
