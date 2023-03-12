@@ -78,6 +78,27 @@ Whyyyyyyy my ECS Task dbca3f26760b475ea4c47f57f2d31fdd is 'STOPPED' or 'shutting
 ############################## END :::PLM Lab 3::: ##############################
 ```
 
+6. Lets further break the Networking and ECS Infrastruction to troubleshoot the Lab 4, 5, 6 and 7
+a. First Break Networking...
+```
+aws cloudformation update-stack --template-body file://PLM-VPC/Problematic_PLM-VPC.yaml --region us-west-2 --tags Key=Cost,Value=PLM Key=MinorCost,Value=PLM-VPC --stack-name PLM-VPC
+```
+b. Wait before the CFN stack is `UPDATE_COMPLETE`
+```
+while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
+```
+c. Then Break ECS Infra...
+```
+
+```
+
+
+
+
+
+
+
+
 ```
 CannotStartContainerError
 18977b93c0ff43ad8d50cc094848e2dc

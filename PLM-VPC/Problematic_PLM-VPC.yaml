@@ -253,7 +253,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-AllInterfaceEndpointSecurityGroup
-
   AllInterfaceEndpointSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -265,6 +264,22 @@ Resources:
       # FromPort: 80    # Prob 4
       # ToPort: 80      # Prob 4
       Description: Allow Inbound access to the InterfaceEndpoint
+
+  DefaultInterfaceEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: DefaultInterfaceEndpointSecurityGroup
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-DefaultInterfaceEndpointSecurityGroup
+  DefaultInterfaceEndpointSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DefaultInterfaceEndpointSecurityGroup
+      SourceSecurityGroupId: !Ref DefaultInterfaceEndpointSecurityGroup
+      IpProtocol: -1
+      Description: DefaultInterfaceEndpointSecurityGroup
 
   CWLogInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -287,7 +302,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcrDkrInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -314,7 +329,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcrApiInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -340,7 +355,7 @@ Resources:
       SecurityGroupIds:
         # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
         - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   SsmInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -363,7 +378,7 @@ Resources:
       SecurityGroupIds:
         # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
         - !Ref AllInterfaceEndpointSecurityGroup  # Prob 6
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsAgentInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -384,7 +399,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsTelemetryInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -405,7 +420,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -426,7 +441,7 @@ Resources:
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
         - !Ref AllInterfaceEndpointSecurityGroup
-        - sg-0a96907a215dea8c9
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
 
 
