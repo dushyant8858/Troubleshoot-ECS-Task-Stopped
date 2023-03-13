@@ -248,7 +248,7 @@ Resources:
   AllInterfaceEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow Inbound+Outbond access to the InterfaceEndpoint
+      GroupDescription: Allow Inbound+Outbond access to the Non SSM InterfaceEndpoint
       VpcId: !Ref 'VPC'
       Tags:
         - Key: Name
@@ -263,7 +263,25 @@ Resources:
       # ToPort: 443   # Fix 4
       FromPort: 80    # Prob 4
       ToPort: 80      # Prob 4
-      Description: Allow Inbound access to the InterfaceEndpoint
+      Description: Allow Inbound access to the Non SSM InterfaceEndpoint
+
+  SsmInterfaceEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Inbound+Outbond access to the SSM InterfaceEndpoint
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-SsmInterfaceEndpointSecurityGroup
+  SsmInterfaceEndpointSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SsmInterfaceEndpointSecurityGroup
+      CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+      IpProtocol: tcp
+      FromPort: 443 
+      ToPort: 443
+      Description: Allow Inbound access to the SSM InterfaceEndpoint
 
   DefaultInterfaceEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -284,8 +302,7 @@ Resources:
   CWLogInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
-      # PrivateDnsEnabled: true # Fix 6
-      PrivateDnsEnabled: false # Prob 6
+      PrivateDnsEnabled: true # Fix 6
       VpcEndpointType: Interface
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
       PolicyDocument:
@@ -372,7 +389,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
+        - !Ref SsmInterfaceEndpointSecurityGroup
         - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsAgentInterfaceEndpoint:
