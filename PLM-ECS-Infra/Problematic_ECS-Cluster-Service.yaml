@@ -425,7 +425,7 @@ Resources:
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM1TaskStoppedByUserContainerPort'
             - Name: WHOAMI_NAME
-              Value: !Ref 'PLM1TaskStoppedByUserServiceName'          
+              Value: !Sub Congratulations! Lab "${PLM1TaskStoppedByUserServiceName}" is now successfully complete :)
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -528,7 +528,7 @@ Resources:
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM2ServiceScalingEventTriggeredContainerPort'
             - Name: WHOAMI_NAME
-              Value: !Ref 'PLM2ServiceScalingEventTriggeredServiceName'          
+              Value: !Sub Congratulations! Lab "${PLM2ServiceScalingEventTriggeredServiceName}" is now successfully completed :)
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -671,7 +671,7 @@ Resources:
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM3UnhealthyContainerInstanceContainerPort'
             - Name: WHOAMI_NAME
-              Value: !Ref 'PLM3UnhealthyContainerInstanceServiceName'          
+              Value: !Sub Congratulations! Lab "${PLM3UnhealthyContainerInstanceServiceName}" is now successfully completed :)         
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -775,7 +775,7 @@ Resources:
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM4CannotPullContainerErrorContainerPort'
             - Name: WHOAMI_NAME
-              Value: !Ref 'PLM4CannotPullContainerErrorServiceName'          
+              Value: !Sub Congratulations! Lab "${PLM4CannotPullContainerErrorServiceName}" is now successfully completed :)
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -887,8 +887,6 @@ Resources:
           Environment: 
             - Name: WHOAMI_PORT_NUMBER
               Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
-            # - Name: WHOAMI_NAME
-            #   Value: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Secrets:
             - Name: WHOAMI_NAME
               # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 6
