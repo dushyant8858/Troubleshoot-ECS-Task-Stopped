@@ -162,7 +162,7 @@ level=info time=2023-03-13T15:18:48Z msg="Sending state change to ECS" eventType
 
 
 ## 5. PLM5ResourceInitializationErrorECSService
-9. Run below command and troublesoot Lab 6
+9. Run below command and troublesoot Lab 5
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-5-script.sh
 ```
