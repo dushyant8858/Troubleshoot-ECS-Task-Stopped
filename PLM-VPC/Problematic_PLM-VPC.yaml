@@ -133,8 +133,7 @@ Resources:
     DependsOn: GatewayAttachement
     Properties:
       RouteTableId: !Ref 'PublicRouteTable'
-      DestinationCidrBlock: '0.0.0.0/0' # Fix 1
-      # DestinationCidrBlock: '192.168.0.0/16'   # Prob 1
+      DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref 'InternetGateway'
   PublicSubnetOneRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -151,14 +150,22 @@ Resources:
   # in these subnets have only private IP addresses, and must use a NAT
   # gateway to talk to the internet. We launch two NAT gateways, one for
   # each private subnet.
-  NatGatewayOneAttachmentBAD: # Prob 2
+  # NatGatewayOneAttachmentBAD: # Prob 4.1
+  #   Type: AWS::EC2::EIP
+  #   DependsOn: GatewayAttachement
+  #   Properties:
+  #     Domain: vpc
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
+  NatGatewayOneAttachment: # Fix 4.1
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
+          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
   NatGatewayTwoAttachment:
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
@@ -170,9 +177,10 @@ Resources:
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId # Prob 2
-      # SubnetId: !Ref PublicSubnetOne  # Fix 2
-      SubnetId: !Ref PrivateSubnetOne  # Prob 2
+      # AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId # Prob 4.1
+      # SubnetId: !Ref PrivateSubnetOne  # Prob 4.1
+      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId # Fix 4.1
+      SubnetId: !Ref PublicSubnetOne  # Fix 4.1
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-NatGatewayOne
@@ -259,10 +267,10 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      # FromPort: 443 # Fix 4
-      # ToPort: 443   # Fix 4
-      FromPort: 80    # Prob 4
-      ToPort: 80      # Prob 4
+      FromPort: 443 # Fix 1.1
+      ToPort: 443   # Fix 1.1
+      # FromPort: 80    # Prob 1.1
+      # ToPort: 80      # Prob 1.1
       Description: Allow Inbound access to the Non SSM InterfaceEndpoint
 
   # SsmEc2SsmMessagesInterfaceEndpointSecurityGroup:
@@ -333,10 +341,8 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              # - 'ecr:GetAuthorizationToken' # Fix 5  # Prob 5
-            # Resource: '*' # Fix 7 
-            Resource:
-              - !Sub 'arn:aws:ecr:us-east-2:${AWS::AccountId}:repository/dushyant8858/traefik-whoami'   # Prob 7 
+              - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
+            Resource: '*'
             Effect: Allow
             Principal: '*'
       VpcId: !Ref VPC
@@ -359,7 +365,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              # - 'ecr:GetAuthorizationToken' # Fix 5  # Prob 5
+              - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -368,8 +374,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
-        - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6
+        - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6.1
+        - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6.1
 
   # SsmInterfaceEndpoint:
   #   Type: 'AWS::EC2::VPCEndpoint'
@@ -452,7 +458,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup
+        - !Ref AllInterfaceEndpointSecurityGroup    # Prob 2.1    # Fix 2.1
         - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsTelemetryInterfaceEndpoint:
@@ -494,8 +500,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6
-        - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6
+        - !Ref AllInterfaceEndpointSecurityGroup
+        - !Ref DefaultInterfaceEndpointSecurityGroup
 
 
 
@@ -536,8 +542,3 @@ Outputs:
     Value: !Ref 'PrivateSubnetTwo'
     Export:
       Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
-  NatGatewayOneAttachmentBAD: 
-    Description: NAT's EIP
-    Value: !Ref 'NatGatewayOneAttachmentBAD'
-    Export:
-      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachmentBAD

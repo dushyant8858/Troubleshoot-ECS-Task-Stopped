@@ -128,18 +128,28 @@ Whyyyyyyy my ECS Task faab2faa3c244d54b43cc42bcf9dd810 is NOT RUNNING? My Websit
 ```
 8. Some error you will notice:
 ```
-service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA was unable to place a task because no container instance met all of its requirements. The closest matching container-instance 3a09814c860f4d3fb05f6f14c6489eb3 doesn't have the agent connected. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide.	
+(service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA) was unable to place a task because no container instance met all of its requirements. The closest matching (container-instance 3a09814c860f4d3fb05f6f14c6489eb3) doesn't have the agent connected. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide.
 ```
 ```
-service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::8xxxxxxxxxx0:role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.).	
+(service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA) failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::8xxxxxxxxxx0:role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.).
 ```
 ```
-
+CannotPullContainerError: Error response from daemon: Get "https://8xxxxxxxxxx0.dkr.ecr.us-west-2.amazonawss.com/v2/": dial tcp 3.33.139.32:443: i/o timeout
 ```
-
-
-
-
+```
+CannotPullContainerError: Error response from daemon: Get "https://8xxxxxxxxxx0.dkr.ecr.us-west-2.amazonawss.com/v2/": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+```
+```
+CannotPullECRContainerError: RequestError: send request failed caused by: Post "https://api.ecr.us-west-2.amazonaws.com/": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+```
+```
+level=error time=2023-03-13T15:08:12Z msg="Error while pulling image; will try to run anyway" image="8xxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.com/dushyant8858/traefik-whoami:latest" container="PLM4CannotPullContainerError" error="AccessDeniedException: User: arn:aws:sts::8xxxxxxxxxx0:assumed-role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1/8ff4fbc265ee40bba57f8f709c43fef3 is not authorized to perform: ecr:GetAuthorizationToken on resource: * because no VPC endpoint policy allows the ecr:GetAuthorizationToken action\n\tstatus code: 400, request id: 3d181671-2223-4f93-914b-92c606357e06" task="8ff4fbc265ee40bba57f8f709c43fef3"
+...
+level=info time=2023-03-13T15:08:12Z msg="Sending state change to ECS" eventType="task" eventData="TaskChange: [arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/8ff4fbc265ee40bba57f8f709c43fef3 -> STOPPED, Known Sent: NONE, PullStartedAt: 2023-03-13 15:08:12.427031721 +0000 UTC m=+128790.604338705, PullStoppedAt: 2023-03-13 15:08:12.492694518 +0000 UTC m=+128790.670001512, ExecutionStoppedAt: 2023-03-13 15:08:12.518532546 +0000 UTC m=+128790.695839544, container change: arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/8ff4fbc265ee40bba57f8f709c43fef3 PLM4CannotPullContainerError -> STOPPED, Reason CannotPullECRContainerError: AccessDeniedException: User: arn:aws:sts::8xxxxxxxxxx0:assumed-role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1/8ff4fbc265ee40bba57f8f709c43fef3 is not authorized to perform: ecr:GetAuthorizationToken on resource: * because no VPC endpoint policy allows the ecr:GetAuthorizationToken action\n\tstatus code: 400, request id: 3d181671-2223-4f93-914b-92c606357e06, Known Sent: NONE] sent: false"
+```
+```
+level=info time=2023-03-13T15:18:48Z msg="Sending state change to ECS" eventType="task" eventData="TaskChange: [arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/0565d0c4e65d46b6be9a2f5fdcdc0a9f -> STOPPED, Known Sent: NONE, PullStartedAt: 2023-03-13 15:18:47.835083835 +0000 UTC m=+129426.012390829, PullStoppedAt: 2023-03-13 15:18:47.874903409 +0000 UTC m=+129426.052210406, ExecutionStoppedAt: 2023-03-13 15:18:47.901643947 +0000 UTC m=+129426.078950951, container change: arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/0565d0c4e65d46b6be9a2f5fdcdc0a9f PLM4CannotPullContainerError -> STOPPED, Reason CannotPullECRContainerError: AccessDeniedException: User: arn:aws:sts::8xxxxxxxxxx0:assumed-role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1/0565d0c4e65d46b6be9a2f5fdcdc0a9f is not authorized to perform: ecr:GetAuthorizationToken on resource: * because no identity-based policy allowsthe ecr:GetAuthorizationToken action\n\tstatus code: 400, request id: 5f798344-1a05-44bc-ba39-41629df40791, Known Sent: NONE] sent: false"
+```
 
 
 

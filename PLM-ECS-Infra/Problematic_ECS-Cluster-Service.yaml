@@ -316,7 +316,9 @@ Resources:
             - - |
                 #!/bin/bash -xe
               - |
-                yum update -y 
+                yum update -y
+              - |
+                yum install tmux -y
               - |
                 yum install aws-cfn-bootstrap -y 
               - '/opt/aws/bin/cfn-init -v '
@@ -355,7 +357,7 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       MinSize: '1'
       MaxSize: '6'
-      DesiredCapacity: '6'
+      DesiredCapacity: '2'
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: '1'
@@ -375,15 +377,15 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        # - Effect: Allow
-        - Effect: Deny           # Prob 1      # Fix 1
+        - Effect: Allow        # Fix 3.2
+        # - Effect: Deny           # Prob 3.2      
           Principal:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
-        # - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 2      # Fix 2
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.2      # Fix 8.2
         # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 2      # Fix 2
 
 ####################
@@ -763,8 +765,8 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 4
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawss.com/${PLMImageUrl}'    # Prob 4
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawss.com/${PLMImageUrl}'    # Prob 5.2
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp

@@ -447,8 +447,3 @@ Outputs:
     Value: !Ref 'PrivateSubnetTwo'
     Export:
       Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
-  NatGatewayOneAttachment: 
-    Description: NAT's EIP
-    Value: !Ref 'NatGatewayOneAttachment'
-    Export:
-      Name: !Sub ${EnvironmentName}:NatGatewayOneAttachment
