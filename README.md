@@ -101,6 +101,8 @@ while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-na
 ```
 
 ## 4. PLM4CannotPullContainerErrorECSService
+https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html
+
 7. Run below command and troublesoot Lab 4
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-4-script.sh
@@ -159,7 +161,7 @@ level=info time=2023-03-13T15:18:48Z msg="Sending state change to ECS" eventType
 ```
 
 
-## 5. PLM4CannotPullContainerErrorECSService
+## 5. PLM5ResourceInitializationErrorECSService
 9. Run below command and troublesoot Lab 6
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-5-script.sh

@@ -377,15 +377,15 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        # - Effect: Allow        # Fix 3.2
-        - Effect: Deny           # Prob 3.2      
+        - Effect: Allow        # Fix 3.4.2
+        # - Effect: Deny           # Prob 3.4.2      
           Principal:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
-        # - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.2      # Fix 8.2
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.4.2      # Fix 8.4.2
         # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
 
 ####################
@@ -763,8 +763,8 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.4.2
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawsssssssssssss.com/${PLMImageUrl}'    # Prob 5.4.2
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.4.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawsssssssssssss.com/${PLMImageUrl}'    # Prob 5.4.2
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp
