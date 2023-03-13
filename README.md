@@ -126,6 +126,16 @@ Whyyyyyyy my ECS Task ebf9d46969c145debd9b9bd9e884621b is NOT RUNNING? My Websit
 Whyyyyyyy my ECS Task faab2faa3c244d54b43cc42bcf9dd810 is NOT RUNNING? My Website went DOWN due to this!
 ############################## END :::PLM Lab 4::: ##############################
 ```
+8. Some error you will notice:
+```
+service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA was unable to place a task because no container instance met all of its requirements. The closest matching container-instance 3a09814c860f4d3fb05f6f14c6489eb3 doesn't have the agent connected. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide.	
+```
+```
+service PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::8xxxxxxxxxx0:role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.).	
+```
+```
+
+```
 
 
 
