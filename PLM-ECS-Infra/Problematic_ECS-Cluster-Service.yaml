@@ -1001,7 +1001,7 @@ Resources:
             StartPeriod: 180      # Prob 15.6.2    # Fix 15.6.2
           EntryPoint: ["sh" , "-c"]   # Fix 13.6.2
           # EntryPoint: ["sh" , "c"]     # Prob 13.6.2
-          Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab 6!! "PLM6FailedContainerHealthChecks" :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server takes approx. 120-150s to start so please me patience!' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
+          Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab 6!! 'PLM6FailedContainerHealthChecks' :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server takes approx. 120-150s to start so please me patience!' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -1115,8 +1115,8 @@ Resources:
               Value: !Ref 'FrontEndDateTimeContainerPort'
             - Name: REST_HOSTNAME
               # # backendgreeting.backendgreeting
-              # Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}    # Fix 15
-              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}.PLM-Failing-Endpoint   # Prob 15
+              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}    # Fix 16.7.2
+              # Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}.PLM-Failing-Endpoint   # Prob 16.7.2
             - Name: REST_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
@@ -1158,7 +1158,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      # # HealthCheckPath Prob 17  Fix 17 
       HealthCheckPath: /frontenddatetime/backendgreeting 
       # HealthCheckPath: /frontenddatetime
       HealthCheckProtocol: HTTP
@@ -1211,10 +1210,10 @@ Resources:
             IpProtocol: tcp
             FromPort: !Ref BackEndGreetingContainerPort
             ToPort: !Ref BackEndGreetingContainerPort
-          # - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
-          #   IpProtocol: tcp
-          #   FromPort: !Ref BackEndGreetingContainerPort
-          #   ToPort: !Ref BackEndGreetingContainerPort
+          - SourceSecurityGroupId: !Ref FrontEndDateTimeContainerSecurityGroup
+            IpProtocol: tcp
+            FromPort: !Ref BackEndGreetingContainerPort
+            ToPort: !Ref BackEndGreetingContainerPort
 
   BackEndGreetingTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -1290,10 +1289,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 15
-      # HealthCheckPath: /backendgreeting    # Fix 18
-      # HealthCheckProtocol: HTTP            # Fix 18
-      HealthCheckProtocol: HTTPS          # Prob 18
-      HealthCheckPath: /backendgreet      # Prob 18
+      HealthCheckPath: /backendgreeting           # Fix 17.7.2
+      HealthCheckProtocol: HTTP                   # Fix 17.7.2
+      # HealthCheckProtocol: HTTPS                # Prob 17.7.2
+      # HealthCheckPath: /backendgreetinggggg     # 17.7.2
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip

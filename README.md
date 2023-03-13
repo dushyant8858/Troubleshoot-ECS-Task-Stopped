@@ -235,6 +235,7 @@ Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM6FailedContainerHealthCheck
 ############################## END :::PLM Lab 6::: ##############################
 ```
 12. Some error you will notice:
+Troubleshoot guide: https://aws.amazon.com/premiumsupport/knowledge-center/ecs-task-container-health-check-failures/
 ```
 Essential container in task exited
 
@@ -255,4 +256,51 @@ Logs:
 ```
 ```
 Task failed ELB health checks in (target-group arn:aws:elasticloadbalancing:us-west-2:8xxxxxxxxxx0:targetgroup/PLM-EC-PLM6F-A8OKA66DVRBX/4fe72fe75cdf9149)
+```
+
+
+## 7. ALB Health check Failure
+13. Run below command and troublesoot Lab 6
+```
+sh PLM-ECS-Infra/PLM-ECS-Lab-7-script.sh
+```
+```
+"ECS deployment ecs-svc/2721925815705398450 in progress."
+"ECS deployment ecs-svc/1513561454589138998 in progress."
+Waiting... 40s
+Waiting... 35s
+Waiting... 30s
+Waiting... 25s
+Waiting... 20s
+Waiting... 15s
+Waiting... 10s
+Waiting... 5s
+Waiting... 0s DONE
+
+################################################################################################
+:::PLM Lab 7::: Troubleshoot ECS Service: PLM-ECS-FrontEndDateTimeECSService-Uv4AFj0Elz3x
+################################################################################################
+
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-6MVDIwxByE6W
+FrontEndDateTimeECSService_ECS_SERVICE_NAME = PLM-ECS-FrontEndDateTimeECSService-Uv4AFj0Elz3x
+
+Whyyyyyyy my ECS Task af1fbb88d5f4476fa5e08041b664fbd6 is NOT RUNNING? My Website went DOWN due to this!
+############################## END :::PLM Lab 7::: ##############################
+
+################################################################################################
+:::PLM Lab 7::: Troubleshoot ECS Service: PLM-ECS-FrontEndDateTimeECSService-Uv4AFj0Elz3x
+################################################################################################
+
+Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-FrontEndDateTimeECSService-Uv4AFj0Elz3x' is not running? My Website went DOWN due to this!
+############################## END :::PLM Lab 7::: ##############################
+```
+
+
+14. Some error you will notice:
+```
+Task failed ELB health checks in (target-group arn:aws:elasticloadbalancing:us-west-2:8xxxxxxxxxx0:targetgroup/PLM-EC-Front-QOXLVGYPLTKN/87338e954c567776)
+
+...
+Logs:
+REST address: BackEndGreeting.BackEndGreeting.PLM-Failing-Endpoint..... No host found
 ```
