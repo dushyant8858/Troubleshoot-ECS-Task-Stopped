@@ -377,16 +377,16 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow        # Fix 3.2
-        # - Effect: Deny           # Prob 3.2      
+        # - Effect: Allow        # Fix 3.2
+        - Effect: Deny           # Prob 3.2      
           Principal:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.2      # Fix 8.2
-        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
+        # - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.2      # Fix 8.2
+        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
 
 ####################
 # AWS CloudWatch LogGroup resources
@@ -610,10 +610,8 @@ Resources:
       ServiceNamespace: 'ecs'
       ScalableDimension: 'ecs:service:DesiredCount'
       ResourceId: !Join [ '/' , [ 'service' , !Ref 'PLMEcsCluster' , !GetAtt 'PLM2ServiceScalingEventTriggeredECSService.Name' ] ] 
-      # MinCapacity: 10 # Fix 3
-      # MaxCapacity: 20 # Fix 3
-      MinCapacity: 0  # Prob 3
-      MaxCapacity: 0  # Prob 3
+      MinCapacity: 0
+      MaxCapacity: 0
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
 
   PLM2ServiceScalingEventTriggeredTargetTrackingScalingPolicy:
@@ -765,8 +763,8 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.4.2
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawsssssssssssss.com/${PLMImageUrl}'    # Prob 5.4.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.4.2
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawsssssssssssss.com/${PLMImageUrl}'    # Prob 5.4.2
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp
@@ -878,8 +876,8 @@ Resources:
         - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 11.5.2
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.commmmm/${PLMImageUrl}'       # Prob 11.5.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 11.5.2
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.commmmm/${PLMImageUrl}'       # Prob 11.5.2
           PortMappings:
             - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
               Protocol: tcp
@@ -889,13 +887,13 @@ Resources:
               Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
           Secrets:
             - Name: WHOAMI_NAME
-              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 10.5.2
-              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PLMSecretParameter'      # Prob 10.5.2
+              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 10.5.2
+              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PLMSecretParameter'      # Prob 10.5.2
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              awslogs-group: !Ref PLMLogGroup   # Fix 12.5.2
-              # awslogs-group: PLMLogGroup    # Prob 12.5.2
+              # awslogs-group: !Ref PLMLogGroup   # Fix 12.5.2
+              awslogs-group: PLMLogGroup    # Prob 12.5.2
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM5ResourceInitializationErrorServiceName'
   PLM5ResourceInitializationErrorECSService:
@@ -992,15 +990,15 @@ Resources:
           HealthCheck:
             Command:                
                 - "CMD-SHELL"
-                - "curl --fail http://localhost/ || exit 1"         # Fix 14.6.2
-                # - "curl --fail http://localhost/health || exit 1"    # Prob 14.6.2
-            Interval: 15  # Fix 14.6.2
-            # Interval: 10    # Prob 14.6.2
+                # - "curl --fail http://localhost/ || exit 1"         # Fix 14.6.2
+                - "curl --fail http://localhost/health || exit 1"    # Prob 14.6.2
+            # Interval: 15  # Fix 14.6.2
+            Interval: 10    # Prob 14.6.2
             Retries: 2
             Timeout: 3
-            StartPeriod: 180      # Prob 15.6.2    # Fix 15.6.2
-          EntryPoint: ["sh" , "-c"]   # Fix 13.6.2
-          # EntryPoint: ["sh" , "c"]     # Prob 13.6.2
+            # StartPeriod: 180      # Prob 15.6.2    # Fix 15.6.2
+          # EntryPoint: ["sh" , "-c"]   # Fix 13.6.2
+          EntryPoint: ["sh" , "c"]     # Prob 13.6.2
           Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab 6!! 'PLM6FailedContainerHealthChecks' :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server takes approx. 120-150s to start so please me patience!' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
           LogConfiguration:
             LogDriver: 'awslogs'
@@ -1029,8 +1027,8 @@ Resources:
   PLM6FailedContainerHealthChecksTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 30  # Fix 14.6.2
-      # HealthCheckIntervalSeconds: 15   # Prob 14.6.2
+      # HealthCheckIntervalSeconds: 30  # Fix 14.6.2
+      HealthCheckIntervalSeconds: 15   # Prob 14.6.2
       HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
@@ -1045,10 +1043,6 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
-        # - Key: slow_start.duration_seconds
-        #   Value: 30
-        # # - Key: load_balancing.algorithm.type
-        # #   Value: least_outstanding_requests
 
   PLM6FailedContainerHealthChecksPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -1115,8 +1109,8 @@ Resources:
               Value: !Ref 'FrontEndDateTimeContainerPort'
             - Name: REST_HOSTNAME
               # # backendgreeting.backendgreeting
-              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}    # Fix 16.7.2
-              # Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}.PLM-Failing-Endpoint   # Prob 16.7.2
+              # Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}                        # Fix 16.7.2
+              Value: !Sub ${BackEndGreetingServiceName}.${DomainBackEndGreetingPrivateServiceDiscoveryNamespace}.PLM-Failing-Endpoint     # Prob 16.7.2
             - Name: REST_PORT
               Value: !Ref 'BackEndGreetingContainerPort'
           LogConfiguration:
@@ -1172,6 +1166,10 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
+        # - Key: slow_start.duration_seconds
+        #   Value: 30
+        # # - Key: load_balancing.algorithm.type
+        # #   Value: least_outstanding_requests
 
   FrontEndDateTimePublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -1290,9 +1288,8 @@ Resources:
     Properties:
       HealthCheckIntervalSeconds: 15
       HealthCheckPath: /backendgreeting           # Fix 17.7.2
-      HealthCheckProtocol: HTTP                   # Fix 17.7.2
-      # HealthCheckProtocol: HTTPS                # Prob 17.7.2
       # HealthCheckPath: /backendgreetinggggg     # 17.7.2
+      HealthCheckProtocol: HTTP                   # Fix 17.7.2
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 4
       TargetType: ip
@@ -1304,6 +1301,10 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
+        # - Key: slow_start.duration_seconds
+        #   Value: 30
+        # # - Key: load_balancing.algorithm.type
+        # #   Value: least_outstanding_requests
 
   BackEndGreetingPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
