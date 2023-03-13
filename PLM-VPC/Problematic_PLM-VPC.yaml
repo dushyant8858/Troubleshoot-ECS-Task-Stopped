@@ -150,22 +150,26 @@ Resources:
   # in these subnets have only private IP addresses, and must use a NAT
   # gateway to talk to the internet. We launch two NAT gateways, one for
   # each private subnet.
-  # NatGatewayOneAttachmentBAD: # Prob 4.1
-  #   Type: AWS::EC2::EIP
-  #   DependsOn: GatewayAttachement
-  #   Properties:
-  #     Domain: vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
-  NatGatewayOneAttachment: # Fix 4.1
+  #### Prob 4.1 ####
+  NatGatewayOneAttachmentBAD:
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
+          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
+  ################
+  # #### Fix 4.1 ####
+  # NatGatewayOneAttachment:
+  #   Type: AWS::EC2::EIP
+  #   DependsOn: GatewayAttachement
+  #   Properties:
+  #     Domain: vpc
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
+  # ################
   NatGatewayTwoAttachment:
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
@@ -177,10 +181,10 @@ Resources:
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
-      # AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId # Prob 4.1
-      # SubnetId: !Ref PrivateSubnetOne  # Prob 4.1
-      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId # Fix 4.1
-      SubnetId: !Ref PublicSubnetOne  # Fix 4.1
+      AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId       # Prob 4.1
+      SubnetId: !Ref PrivateSubnetOne                                     # Prob 4.1
+      # AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId            # Fix 4.1
+      # SubnetId: !Ref PublicSubnetOne                                        # Fix 4.1
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-NatGatewayOne
@@ -230,28 +234,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableTwo
       SubnetId: !Ref PrivateSubnetTwo
 
-  # # OPTIONAL: VPC Endpoint for S3
-  # # If a container needs to access S3 this allows a container in the private subnet
-  # # to talk to S3 directly without needing to go via the NAT gateway. This reduces
-  # # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
-  # # your other traffic.
-  # S3GatewayEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         # - Effect: Allow # Fix 3
-  #         - Effect: Deny # Fix 3
-  #           Action: "*"
-  #           Principal: "*"
-  #           Resource: "*"
-  #     RouteTableIds:
-  #       - !Ref 'PublicRouteTable'
-  #       - !Ref 'PrivateRouteTableOne'
-  #       - !Ref 'PrivateRouteTableTwo'
-  #     VpcId: !Ref 'VPC'
 
   AllInterfaceEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -267,29 +249,11 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      FromPort: 443 # Fix 1.1
-      ToPort: 443   # Fix 1.1
-      # FromPort: 80    # Prob 1.1
-      # ToPort: 80      # Prob 1.1
+      # FromPort: 443 # Fix 1.1
+      # ToPort: 443   # Fix 1.1
+      FromPort: 80    # Prob 1.1
+      ToPort: 80      # Prob 1.1
       Description: Allow Inbound access to the Non SSM InterfaceEndpoint
-
-  # SsmEc2SsmMessagesInterfaceEndpointSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: Allow Inbound+Outbond access to the SSM, EC2 SSMMessages InterfaceEndpoint
-  #     VpcId: !Ref 'VPC'
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub ${EnvironmentName}-SsmEc2SsmMessagesInterfaceEndpointSecurityGroup
-  # SsmEc2SsmMessagesInterfaceEndpointSecurityGroupIngress:
-  #   Type: AWS::EC2::SecurityGroupIngress
-  #   Properties:
-  #     GroupId: !Ref SsmEc2SsmMessagesInterfaceEndpointSecurityGroup
-  #     CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
-  #     IpProtocol: tcp
-  #     FromPort: 443 
-  #     ToPort: 443
-  #     Description: Allow Inbound access to the SSM, EC2 SSMMessages InterfaceEndpoint
 
   DefaultInterfaceEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -307,28 +271,6 @@ Resources:
       IpProtocol: -1
       Description: DefaultInterfaceEndpointSecurityGroup
 
-  # CWLogInterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     PrivateDnsEnabled: true # Fix 6
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         # - Effect: Allow # Fix 3
-  #         - Effect: Deny # Fix 3
-  #           Action: "*"
-  #           Principal: "*"
-  #           Resource: "*"
-  #     VpcId: !Ref VPC
-  #     SubnetIds: 
-  #       - !Ref PrivateSubnetOne
-  #       - !Ref PrivateSubnetTwo
-  #     SecurityGroupIds:
-  #       # - !Ref AllInterfaceEndpointSecurityGroup
-  #       - !Ref DefaultInterfaceEndpointSecurityGroup
-
   EcrDkrInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
@@ -341,7 +283,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
+              # - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -365,7 +307,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
+              # - 'ecr:GetAuthorizationToken' # Fix 7.1  # Prob 7.1
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -374,71 +316,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6.1
+        # - !Ref AllInterfaceEndpointSecurityGroup  # Fix 6.1
         - !Ref DefaultInterfaceEndpointSecurityGroup # Prob 6.1
-
-  # SsmInterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     PrivateDnsEnabled: true
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
-  #     PolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Action: "*"
-  #           Resource: '*'
-  #           Effect: Allow
-  #           Principal: '*'
-  #     VpcId: !Ref VPC
-  #     SubnetIds: 
-  #       - !Ref PrivateSubnetOne
-  #       - !Ref PrivateSubnetTwo
-  #     SecurityGroupIds:
-  #       - !Ref SsmEc2SsmMessagesInterfaceEndpointSecurityGroup
-  #       - !Ref DefaultInterfaceEndpointSecurityGroup
-
-  # Ec2InterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     PrivateDnsEnabled: true
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
-  #     PolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Action: "*"
-  #           Resource: '*'
-  #           Effect: Allow
-  #           Principal: '*'
-  #     VpcId: !Ref VPC
-  #     SubnetIds: 
-  #       - !Ref PrivateSubnetOne
-  #       - !Ref PrivateSubnetTwo
-  #     SecurityGroupIds:
-  #       - !Ref SsmEc2SsmMessagesInterfaceEndpointSecurityGroup
-  #       - !Ref DefaultInterfaceEndpointSecurityGroup
-
-  # SsmMessagesInterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     PrivateDnsEnabled: true
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
-  #     PolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Action: "*"
-  #           Resource: '*'
-  #           Effect: Allow
-  #           Principal: '*'
-  #     VpcId: !Ref VPC
-  #     SubnetIds: 
-  #       - !Ref PrivateSubnetOne
-  #       - !Ref PrivateSubnetTwo
-  #     SecurityGroupIds:
-  #       - !Ref SsmEc2SsmMessagesInterfaceEndpointSecurityGroup
-  #       - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsAgentInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
@@ -458,7 +337,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup    # Prob 2.1    # Fix 2.1
+        # - !Ref AllInterfaceEndpointSecurityGroup    # Prob 2.1    # Fix 2.1
         - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcsTelemetryInterfaceEndpoint:

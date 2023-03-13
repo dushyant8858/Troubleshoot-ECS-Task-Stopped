@@ -220,27 +220,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableTwo
       SubnetId: !Ref PrivateSubnetTwo
 
-  # # OPTIONAL: VPC Endpoint for S3
-  # # If a container needs to access S3 this allows a container in the private subnet
-  # # to talk to S3 directly without needing to go via the NAT gateway. This reduces
-  # # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
-  # # your other traffic.
-  # S3GatewayEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Action: "*"
-  #           Principal: "*"
-  #           Resource: "*"
-  #     RouteTableIds:
-  #       - !Ref 'PublicRouteTable'
-  #       - !Ref 'PrivateRouteTableOne'
-  #       - !Ref 'PrivateRouteTableTwo'
-  #     VpcId: !Ref 'VPC'
 
   AllInterfaceEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -275,27 +254,6 @@ Resources:
       SourceSecurityGroupId: !Ref DefaultInterfaceEndpointSecurityGroup
       IpProtocol: -1
       Description: DefaultInterfaceEndpointSecurityGroup
-
-  # CWLogInterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     PrivateDnsEnabled: true
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Action: "*"
-  #           Principal: "*"
-  #           Resource: "*"
-  #     VpcId: !Ref VPC
-  #     SubnetIds: 
-  #       - !Ref PrivateSubnetOne
-  #       - !Ref PrivateSubnetTwo
-  #     SecurityGroupIds:
-  #       - !Ref AllInterfaceEndpointSecurityGroup
-  #       - !Ref DefaultInterfaceEndpointSecurityGroup
 
   EcrDkrInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
