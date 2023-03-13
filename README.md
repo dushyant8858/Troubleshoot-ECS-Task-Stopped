@@ -64,6 +64,7 @@ Whyyyyyyy my ECS Task fed4529fa849465989546ead2af3060b was 'STOPPED'? My Website
 ```
 
 ## 3. PLM3UnhealthyContainerInstance
+https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StateReason.html
 ```
 ################################################################################################
 :::PLM Lab 3::: Troubleshoot ECS Service: PLM-ECS-PLM3UnhealthyContainerInstanceECSService-Y1jJi2UKBzjo
@@ -82,7 +83,7 @@ Whyyyyyyy my ECS Task dbca3f26760b475ea4c47f57f2d31fdd is 'STOPPED' or 'shutting
 
 a. Then Break ECS Infra...
 ```
-aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Fixed_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
+aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Problematic_ECS-Cluster-Service.yaml --capabilities CAPABILITY_IAM --region us-west-2 --tags Key=Cost,Value=PLM-ECS --stack-name PLM-ECS
 ```
 
 b. Wait before the "PLM-ECS" CFN stack is `UPDATE_COMPLETE`
