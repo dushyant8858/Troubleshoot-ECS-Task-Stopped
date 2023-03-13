@@ -159,7 +159,7 @@ level=info time=2023-03-13T15:18:48Z msg="Sending state change to ECS" eventType
 
 
 ## 5. PLM4CannotPullContainerErrorECSService
-9. Run below command and troublesoot Lab 5
+9. Run below command and troublesoot Lab 6
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-5-script.sh
 ```
@@ -176,7 +176,7 @@ Waiting... 5s
 Waiting... 0s DONE
 
 ################################################################################################
-:::PLM Lab 5::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
+:::PLM Lab 6::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
 ################################################################################################
 
 ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-6MVDIwxByE6W
@@ -185,14 +185,14 @@ PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME = PLM-ECS-PLM5Resourc
 Whyyyyyyy my ECS Task 150fd9859cb445ba970f570e594a739c is NOT RUNNING? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task 52fbc64c842f451d9a1fc0ba291e2094 is NOT RUNNING? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task cb6e89f35c9546f5949e2894d12f01bd is NOT RUNNING? My Website went DOWN due to this!
-############################## END :::PLM Lab 5::: ##############################
+############################## END :::PLM Lab 6::: ##############################
 
 ################################################################################################
-:::PLM Lab 5::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
+:::PLM Lab 6::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
 ################################################################################################
 
 Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS' is not running? My Website went DOWN due to this!
-############################## END :::PLM Lab 5::: ##############################
+############################## END :::PLM Lab 6::: ##############################
 ```
 10. Some error you will notice:
 ```
@@ -210,25 +210,49 @@ CannotStartContainerError: Error response from daemon: failed to initialize logg
 
 
 
-
-
-
-
-
-
-
+## 6. PLM6FailedContainerHealthChecksECSService
+11. Run below command and troublesoot Lab 6
 ```
-CannotStartContainerError
-18977b93c0ff43ad8d50cc094848e2dc
-Status reason	CannotStartContainerError: Error response from daemon: failed to initialize logging driver: failed to create Cloudwatch log stream: ResourceNotFoundException: The specified log group does not exist.
+sh PLM-ECS-Infra/PLM-ECS-Lab-6-script.sh
+```
+```
+"ECS deployment ecs-svc/9232663487764909975 in progress."
+Waiting... 40s
+Waiting... 35s
+Waiting... 30s
+Waiting... 25s
+Waiting... 20s
+Waiting... 15s
+Waiting... 10s
+Waiting... 5s
+Waiting... 0s DONE
 
+################################################################################################
+:::PLM Lab 6::: Troubleshoot ECS Service: PLM-ECS-PLM6FailedContainerHealthChecksECSService-PMpyyQ4JiBMR
+################################################################################################
 
-59b93f2f38554f51b75f0ea827723c3c - Status reason	CannotPullContainerError: no matching manifest for linux/amd64 in the manifest list entries
+Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM6FailedContainerHealthChecksECSService-PMpyyQ4JiBMR' is not running? My Website went DOWN due to this!
+############################## END :::PLM Lab 6::: ##############################
+```
+12. Some error you will notice:
+```
+Essential container in task exited
 
+...
+Logs:
+Timestamp                       Message                                 Container
+3/13/2023, 1:14:16 PM	        sh: 0: cannot open c: No such file	    PLM6FailedContainerHealthChecks
+```
+```
+Task failed container health checks
 
-Stopped reason Fetching secret data from SSM Parameter Store in us-west-2: AccessDeniedException: User: arn:aws:sts::8XXXXXXXXX0:assumed-role/PLM-ECS-PLMECSTaskExecutionRole-XXX/59f3473f332042e5840e824b1f8fdbec is not authorized to perform: ssm:GetParameters on resource: arn:aws:ssm:us-west-2:8XXXXXXXXX0:parameter/CFN-PLMSecretParameter-XXX because no identity-based policy allows the ssm:GetParameters action status code: 400, request id: XX-bbd0-XX-b8b8-XX
-
-
-Stopped reason Fetching secret data from SSM Parameter Store in us-west-2: AccessDeniedException: User: arn:aws:sts::8XXXXXXXXX0:assumed-role/PLM-ECS-PLMECSTaskExecutionRole-1ELKRFLI7MRK8/ab31f3f626f2442da9bfb200c618e393 is not authorized to perform: ssm:GetParameters on resource: arn:aws:ssm:us-west-2:8XXXXXXXXX0:parameter/CFN-PLMSecretParameter-BlcjtHm1Fj7R because no VPC endpoint policy allows the ssm:GetParameters action status code: 400, request id: xx-214b-4704-ad1e-xx
-
+...
+Logs:
+127.0.0.1 - - [13/Mar/2023:19:38:45 +0000] "GET /health HTTP/1.1" 404 196
+127.0.0.1 - - [13/Mar/2023:19:38:55 +0000] "GET /health HTTP/1.1" 404 196
+10.0.13.116 - - [13/Mar/2023:19:38:58 +0000] "GET / HTTP/1.1" 200 313
+10.0.30.12 - - [13/Mar/2023:19:38:58 +0000] "GET / HTTP/1.1" 200 313
+```
+```
+Task failed ELB health checks in (target-group arn:aws:elasticloadbalancing:us-west-2:8xxxxxxxxxx0:targetgroup/PLM-EC-PLM6F-A8OKA66DVRBX/4fe72fe75cdf9149)
 ```

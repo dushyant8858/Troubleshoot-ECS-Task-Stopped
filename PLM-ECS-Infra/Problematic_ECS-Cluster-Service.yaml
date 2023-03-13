@@ -990,20 +990,18 @@ Resources:
               Protocol: tcp
               HostPort: 0
           HealthCheck:
-            # StartPeriod: 120  # Fix 8
-            StartPeriod: 120    # Prob 8
-            Command:      # Prob 9       # Fix 9
-                # - "CMD-SHELL"
-                # - "curl --fail http://localhost/ || exit 1"
+            Command:                
                 - "CMD-SHELL"
-                - "curl --fail https://localhost/ || exit 1"
-            # Interval: 15  # Fix 10
-            Interval: 15    # Prob 10
+                - "curl --fail http://localhost/ || exit 1"         # Fix 14.6.2
+                # - "curl --fail http://localhost/health || exit 1"    # Prob 14.6.2
+            Interval: 15  # Fix 14.6.2
+            # Interval: 10    # Prob 14.6.2
             Retries: 2
             Timeout: 3
-          # EntryPoint: ["sh" , "-c"]   # Fix 11
-          EntryPoint: ["sh" , "c"]     # Prob 11
-          Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
+            StartPeriod: 180      # Prob 15.6.2    # Fix 15.6.2
+          EntryPoint: ["sh" , "-c"]   # Fix 13.6.2
+          # EntryPoint: ["sh" , "c"]     # Prob 13.6.2
+          Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab 6!! "PLM6FailedContainerHealthChecks" :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server takes approx. 120-150s to start so please me patience!' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -1017,8 +1015,7 @@ Resources:
     Properties:
       Cluster: !Ref PLMEcsCluster
       LaunchType: EC2
-      # HealthCheckGracePeriodSeconds: '300'  # Fix 12
-      HealthCheckGracePeriodSeconds: '60'    # Prob 12
+      HealthCheckGracePeriodSeconds: '300'  # Fix 15.6.2
       DeploymentConfiguration:
         MaximumPercent: '200'
         MinimumHealthyPercent: '100'
@@ -1032,13 +1029,12 @@ Resources:
   PLM6FailedContainerHealthChecksTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      # HealthCheckIntervalSeconds: 15  # Fix 13
-      HealthCheckIntervalSeconds: 10   # Prob 13
-      # HealthCheckPath: /    # Fix 14
-      HealthCheckPath: /health  # Fix 14
+      HealthCheckIntervalSeconds: 30  # Fix 14.6.2
+      # HealthCheckIntervalSeconds: 15   # Prob 14.6.2
+      HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 4
+      HealthyThresholdCount: 3
       # TargetType: ip
       TargetType: instance
       Port: !Ref 'PLM6FailedContainerHealthChecksContainerPort'
@@ -1049,6 +1045,10 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 10
+        # - Key: slow_start.duration_seconds
+        #   Value: 30
+        # # - Key: load_balancing.algorithm.type
+        # #   Value: least_outstanding_requests
 
   PLM6FailedContainerHealthChecksPublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
