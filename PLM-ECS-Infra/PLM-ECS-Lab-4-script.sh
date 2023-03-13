@@ -29,6 +29,10 @@ aws ecs update-service \
     --region $REGION \
     --query service.deployments[0].rolloutStateReason
 
+echo "Waiting... 40s"
+sleep 5
+echo "Waiting... 35s"
+sleep 5
 echo "Waiting... 30s"
 sleep 5
 echo "Waiting... 25s"

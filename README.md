@@ -125,6 +125,12 @@ Whyyyyyyy my ECS Task 73749240bb6143bc8828784f5e421336 is NOT RUNNING? My Websit
 Whyyyyyyy my ECS Task ebf9d46969c145debd9b9bd9e884621b is NOT RUNNING? My Website went DOWN due to this!
 Whyyyyyyy my ECS Task faab2faa3c244d54b43cc42bcf9dd810 is NOT RUNNING? My Website went DOWN due to this!
 ############################## END :::PLM Lab 4::: ##############################
+
+################################################################################################
+:::PLM Lab 4::: Troubleshoot ECS Service: PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA
+################################################################################################
+Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM4CannotPullContainerErrorECSService-LDiqYGhnkftA' is not running? My Website went DOWN due to this!
+############################## END :::PLM Lab 4::: ##############################
 ```
 8. Some error you will notice:
 ```
@@ -150,6 +156,64 @@ level=info time=2023-03-13T15:08:12Z msg="Sending state change to ECS" eventType
 ```
 level=info time=2023-03-13T15:18:48Z msg="Sending state change to ECS" eventType="task" eventData="TaskChange: [arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/0565d0c4e65d46b6be9a2f5fdcdc0a9f -> STOPPED, Known Sent: NONE, PullStartedAt: 2023-03-13 15:18:47.835083835 +0000 UTC m=+129426.012390829, PullStoppedAt: 2023-03-13 15:18:47.874903409 +0000 UTC m=+129426.052210406, ExecutionStoppedAt: 2023-03-13 15:18:47.901643947 +0000 UTC m=+129426.078950951, container change: arn:aws:ecs:us-west-2:8xxxxxxxxxx0:task/PLM-ECS-PLMEcsCluster-6MVDIwxByE6W/0565d0c4e65d46b6be9a2f5fdcdc0a9f PLM4CannotPullContainerError -> STOPPED, Reason CannotPullECRContainerError: AccessDeniedException: User: arn:aws:sts::8xxxxxxxxxx0:assumed-role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1/0565d0c4e65d46b6be9a2f5fdcdc0a9f is not authorized to perform: ecr:GetAuthorizationToken on resource: * because no identity-based policy allowsthe ecr:GetAuthorizationToken action\n\tstatus code: 400, request id: 5f798344-1a05-44bc-ba39-41629df40791, Known Sent: NONE] sent: false"
 ```
+
+
+## 5. PLM4CannotPullContainerErrorECSService
+9. Run below command and troublesoot Lab 5
+```
+sh PLM-ECS-Infra/PLM-ECS-Lab-5-script.sh
+```
+```
+"ECS deployment ecs-svc/3201896668189956989 in progress."
+Waiting... 40s
+Waiting... 35s
+Waiting... 30s
+Waiting... 25s
+Waiting... 20s
+Waiting... 15s
+Waiting... 10s
+Waiting... 5s
+Waiting... 0s DONE
+
+################################################################################################
+:::PLM Lab 5::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
+################################################################################################
+
+ECS_CLUSTER_NAME = PLM-ECS-PLMEcsCluster-6MVDIwxByE6W
+PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME = PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
+
+Whyyyyyyy my ECS Task 150fd9859cb445ba970f570e594a739c is NOT RUNNING? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task 52fbc64c842f451d9a1fc0ba291e2094 is NOT RUNNING? My Website went DOWN due to this!
+Whyyyyyyy my ECS Task cb6e89f35c9546f5949e2894d12f01bd is NOT RUNNING? My Website went DOWN due to this!
+############################## END :::PLM Lab 5::: ##############################
+
+################################################################################################
+:::PLM Lab 5::: Troubleshoot ECS Service: PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS
+################################################################################################
+
+Whyyyyyyy my ECS Task in the ECS Service 'PLM-ECS-PLM5ResourceInitializationErrorECSService-ynabz0v4qAOS' is not running? My Website went DOWN due to this!
+############################## END :::PLM Lab 5::: ##############################
+```
+10. Some error you will notice:
+```
+Fetching secret data from SSM Parameter Store in us-west-2: AccessDeniedException: User: arn:aws:sts::8xxxxxxxxxx0:assumed-role/PLM-ECS-PLMECSTaskExecutionAndTaskRole-1I2VC5SGVU8Y1/5c0a28eeb5fc45828b57e982c940d1ea is not authorized to perform: ssm:GetParameters on resource: arn:aws:ssm:us-west-2:8xxxxxxxxxx0:parameter/PLMSecretParameter because no identity-based policy allows the ssm:GetParameters action status code: 400, request id: f2a5572f-3f7a-4cf1-8fdf-be6439d78e97
+```
+```
+Fetching secret data from SSM Parameter Store in us-west-2: invalid parameters: /PLMSecretParameter
+```
+```
+CannotPullContainerError: Error response from daemon: Get "https://8xxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.commmmm/v2/": dial tcp: lookup 8xxxxxxxxxx0.dkr.ecr.us-west-2.amazonaws.commmmm on 10.0.0.2:53: no such host
+```
+```
+CannotStartContainerError: Error response from daemon: failed to initialize logging driver: failed to create Cloudwatch log stream: ResourceNotFoundException: The specified log group does not exist.
+```
+
+
+
+
+
+
+
 
 
 

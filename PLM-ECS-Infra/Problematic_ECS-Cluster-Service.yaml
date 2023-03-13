@@ -386,7 +386,7 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.2      # Fix 8.2
-        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 2      # Fix 2
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
 
 ####################
 # AWS CloudWatch LogGroup resources
@@ -765,8 +765,8 @@ Resources:
         - Name: !Ref 'PLM4CannotPullContainerErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.2
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawss.com/${PLMImageUrl}'    # Prob 5.2
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'   # Fix 5.4.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonawsssssssssssss.com/${PLMImageUrl}'    # Prob 5.4.2
           PortMappings:
             - ContainerPort: !Ref 'PLM4CannotPullContainerErrorContainerPort'
               Protocol: tcp
@@ -878,8 +878,8 @@ Resources:
         - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 5
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'       # Prob 5
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 11.5.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.commmmm/${PLMImageUrl}'       # Prob 11.5.2
           PortMappings:
             - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
               Protocol: tcp
@@ -889,13 +889,13 @@ Resources:
               Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
           Secrets:
             - Name: WHOAMI_NAME
-              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 6
-              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'      # Prob 6
+              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 10.5.2
+              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PLMSecretParameter'      # Prob 10.5.2
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              # awslogs-group: !Ref PLMLogGroup   # Fix 7
-              awslogs-group: PLMLogGroup    # Prob 7
+              awslogs-group: !Ref PLMLogGroup   # Fix 12.5.2
+              # awslogs-group: PLMLogGroup    # Prob 12.5.2
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM5ResourceInitializationErrorServiceName'
   PLM5ResourceInitializationErrorECSService:

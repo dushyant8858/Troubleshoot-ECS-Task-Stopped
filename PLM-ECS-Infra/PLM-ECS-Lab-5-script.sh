@@ -29,6 +29,10 @@ aws ecs update-service \
     --region $REGION \
     --query service.deployments[0].rolloutStateReason
 
+echo "Waiting... 40s"
+sleep 5
+echo "Waiting... 35s"
+sleep 5
 echo "Waiting... 30s"
 sleep 5
 echo "Waiting... 25s"
@@ -74,12 +78,12 @@ then
     done
     echo "############################## END :::PLM Lab 5::: ##############################"
 fi
-    # echo ""
-    # echo "################################################################################################"
-    # echo ":::PLM Lab 5::: Troubleshoot ECS Service: $PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME"
-    # echo "################################################################################################"
-    # echo ""
+    echo ""
+    echo "################################################################################################"
+    echo ":::PLM Lab 5::: Troubleshoot ECS Service: $PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME"
+    echo "################################################################################################"
+    echo ""
 
-    # echo "Whyyyyyyy my ECS Task in the ECS Service '$PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME' is not running? My Website went DOWN due to this!"
+    echo "Whyyyyyyy my ECS Task in the ECS Service '$PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME' is not running? My Website went DOWN due to this!"
 
-    # echo "############################## END :::PLM Lab 5::: ##############################"
+    echo "############################## END :::PLM Lab 5::: ##############################"
