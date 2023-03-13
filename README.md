@@ -88,7 +88,7 @@ aws cloudformation update-stack --template-body file://PLM-ECS-Infra/Problematic
 
 b. Wait before the "PLM-ECS" CFN stack is `UPDATE_COMPLETE`
 ```
-while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-VPC --query Stacks[].StackStatus && sleep 5; done
+while true ; do aws cloudformation describe-stacks --region us-west-2 --stack-name PLM-ECS --query Stacks[].StackStatus && sleep 5; done
 ```
 
 c. First Break Networking...
