@@ -24,7 +24,7 @@ PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME=$(aws cloudformation 
 aws ecs update-service \
     --cluster $ECS_CLUSTER_NAME \
     --service $PLM5ResourceInitializationErrorECSService_ECS_SERVICE_NAME \
-    --desired-count 3 \
+    --desired-count 1 \
     --force-new-deployment \
     --region $REGION \
     --query service.deployments[0].rolloutStateReason

@@ -214,6 +214,9 @@ CannotStartContainerError: Error response from daemon: failed to initialize logg
 
 
 ## 6. PLM6FailedContainerHealthChecksECSService
+https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_HealthCheck.html
+https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_definition_parameters.html#:~:text=DISABLED%20is%20used.-,healthCheckGracePeriodSeconds,-Type%3A%20Integer
+
 11. Run below command and troublesoot Lab 6
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-6-script.sh
@@ -263,7 +266,7 @@ Task failed ELB health checks in (target-group arn:aws:elasticloadbalancing:us-w
 
 
 ## 7. ALB Health check Failure
-13. Run below command and troublesoot Lab 6
+13. Run below command and troublesoot Lab 7
 ```
 sh PLM-ECS-Infra/PLM-ECS-Lab-7-script.sh
 ```

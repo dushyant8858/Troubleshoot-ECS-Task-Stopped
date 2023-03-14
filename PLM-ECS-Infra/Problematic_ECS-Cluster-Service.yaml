@@ -386,7 +386,7 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleECS
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy   # Prob 8.4.2      # Fix 8.4.2
-        # - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess                         # Prob 9.5.2      # Fix 9.5.2
 
 ####################
 # AWS CloudWatch LogGroup resources
@@ -876,8 +876,8 @@ Resources:
         - Name: !Ref 'PLM5ResourceInitializationErrorServiceName'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
-          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 11.5.2
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.commmmm/${PLMImageUrl}'       # Prob 11.5.2
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PLMImageUrl}'     # Fix 11.5.2
+          # Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.commmmm/${PLMImageUrl}'       # Prob 11.5.2
           PortMappings:
             - ContainerPort: !Ref 'PLM5ResourceInitializationErrorContainerPort'
               Protocol: tcp
@@ -887,13 +887,13 @@ Resources:
               Value: !Ref 'PLM5ResourceInitializationErrorContainerPort'
           Secrets:
             - Name: WHOAMI_NAME
-              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 10.5.2
-              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PLMSecretParameter'      # Prob 10.5.2
+              valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${PLMSecretParameter}'    # Fix 10.5.2
+              # valueFrom: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PLMSecretParameter'      # Prob 10.5.2
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
-              # awslogs-group: !Ref PLMLogGroup   # Fix 12.5.2
-              awslogs-group: PLMLogGroup    # Prob 12.5.2
+              awslogs-group: !Ref PLMLogGroup   # Fix 12.5.2
+              # awslogs-group: PLMLogGroup    # Prob 12.5.2
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'PLM5ResourceInitializationErrorServiceName'
   PLM5ResourceInitializationErrorECSService:
@@ -990,15 +990,15 @@ Resources:
           HealthCheck:
             Command:                
                 - "CMD-SHELL"
-                # - "curl --fail http://localhost/ || exit 1"         # Fix 14.6.2
-                - "curl --fail http://localhost/health || exit 1"    # Prob 14.6.2
-            # Interval: 15  # Fix 14.6.2
-            Interval: 10    # Prob 14.6.2
+                - "curl --fail http://localhost/ || exit 1"         # Fix 14.6.2
+                # - "curl --fail http://localhost/health || exit 1"    # Prob 14.6.2
+            Interval: 15  # Fix 14.6.2
+            # Interval: 10    # Prob 14.6.2
             Retries: 2
             Timeout: 3
-            # StartPeriod: 180      # Prob 15.6.2    # Fix 15.6.2
-          # EntryPoint: ["sh" , "-c"]   # Fix 13.6.2
-          EntryPoint: ["sh" , "c"]     # Prob 13.6.2
+            StartPeriod: 180              # Prob 15.6.2    # Fix 15.6.2
+          EntryPoint: ["sh" , "-c"]       # Fix 13.6.2
+          # EntryPoint: ["sh" , "c"]      # Prob 13.6.2
           Command: ["/bin/sh -c \" apt update -y && apt install curl -y && echo '<html> <head> <title>PLM Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Welcome to PLM Lab 6!! 'PLM6FailedContainerHealthChecks' :) </h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && echo 'Hello from PLM :)' && echo 'Server takes approx. 120-150s to start so please me patience!' && echo 'Server Starting... 0s' && sleep 30 && echo 'Server Starting... 30s' && sleep 30 && echo 'Server Starting... 90s' && sleep 30 && echo 'Server Starting... 120s'  && httpd-foreground -e debug && echo 'Server successfully Started!!!'\""]
           LogConfiguration:
             LogDriver: 'awslogs'
@@ -1027,8 +1027,8 @@ Resources:
   PLM6FailedContainerHealthChecksTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      # HealthCheckIntervalSeconds: 30  # Fix 14.6.2
-      HealthCheckIntervalSeconds: 15   # Prob 14.6.2
+      HealthCheckIntervalSeconds: 30  # Fix 14.6.2
+      # HealthCheckIntervalSeconds: 15   # Prob 14.6.2
       HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
