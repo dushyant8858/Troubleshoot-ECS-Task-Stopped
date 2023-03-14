@@ -152,24 +152,24 @@ Resources:
   # each private subnet.
 
   #### Prob 4.4.1 ####
-  # NatGatewayOneAttachmentBAD:
-  #   Type: AWS::EC2::EIP
-  #   DependsOn: GatewayAttachement
-  #   Properties:
-  #     Domain: vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
-  ################
-  #### Fix 4.4.1 ####
-  NatGatewayOneAttachment:
+  NatGatewayOneAttachmentBAD:
     Type: AWS::EC2::EIP
     DependsOn: GatewayAttachement
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
+          Value: !Sub ${EnvironmentName}-NatGatewayOneAttachmentBAD
+  ################
+  # #### Fix 4.4.1 ####
+  # NatGatewayOneAttachment:
+  #   Type: AWS::EC2::EIP
+  #   DependsOn: GatewayAttachement
+  #   Properties:
+  #     Domain: vpc
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${EnvironmentName}-NatGatewayOneAttachment
   # ################
   NatGatewayTwoAttachment:
     Type: AWS::EC2::EIP
@@ -182,10 +182,10 @@ Resources:
   NatGatewayOne:
     Type: AWS::EC2::NatGateway
     Properties:
-      # AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId       # Prob 4.4.1
-      # SubnetId: !Ref PrivateSubnetOne                                     # Prob 4.4.1
-      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId            # Fix 4.4.1
-      SubnetId: !Ref PublicSubnetOne                                        # Fix 4.4.1
+      AllocationId: !GetAtt NatGatewayOneAttachmentBAD.AllocationId       # Prob 4.4.1
+      SubnetId: !Ref PrivateSubnetOne                                     # Prob 4.4.1
+      # AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId            # Fix 4.4.1
+      # SubnetId: !Ref PublicSubnetOne                                        # Fix 4.4.1
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-NatGatewayOne
@@ -250,10 +250,10 @@ Resources:
       GroupId: !Ref AllInterfaceEndpointSecurityGroup
       CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
       IpProtocol: tcp
-      FromPort: 443     # Fix 1.4.1
-      ToPort: 443       # Fix 1.4.1
-      # FromPort: 80    # Prob 1.4.1
-      # ToPort: 80      # Prob 1.4.1
+      # FromPort: 443     # Fix 1.4.1
+      # ToPort: 443       # Fix 1.4.1
+      FromPort: 80    # Prob 1.4.1
+      ToPort: 80      # Prob 1.4.1
       Description: Allow Inbound access to the Non SSM InterfaceEndpoint
 
   DefaultInterfaceEndpointSecurityGroup:
@@ -284,7 +284,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken' # Fix 7.4.1  # Prob 7.4.1
+              # - 'ecr:GetAuthorizationToken' # Fix 7.4.1  # Prob 7.4.1
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -308,7 +308,7 @@ Resources:
           - Action:
               - 'ecr:BatchGetImage'
               - 'ecr:GetDownloadUrlForLayer'
-              - 'ecr:GetAuthorizationToken' # Fix 7.4.1  # Prob 7.4.1
+              # - 'ecr:GetAuthorizationToken' # Fix 7.4.1  # Prob 7.4.1
             Resource: '*'
             Effect: Allow
             Principal: '*'
@@ -317,7 +317,7 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup          # Fix 6.4.1
+        # - !Ref AllInterfaceEndpointSecurityGroup          # Fix 6.4.1
         - !Ref DefaultInterfaceEndpointSecurityGroup      # Prob 6.4.1
 
   EcsAgentInterfaceEndpoint:
@@ -338,8 +338,8 @@ Resources:
         - !Ref PrivateSubnetOne
         - !Ref PrivateSubnetTwo
       SecurityGroupIds:
-        - !Ref AllInterfaceEndpointSecurityGroup    # Prob 2.4.1    # Fix 2.4.1
-        - !Ref DefaultInterfaceEndpointSecurityGroup
+        # - !Ref AllInterfaceEndpointSecurityGroup            # Fix 2.4.1
+        - !Ref DefaultInterfaceEndpointSecurityGroup        # Prob 2.4.1
 
   EcsTelemetryInterfaceEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'
