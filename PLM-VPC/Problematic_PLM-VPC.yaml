@@ -7,7 +7,6 @@
 # aws cloudformation delete-stack --region us-west-2 --stack-name PLM-VPC
 
 
-
 AWSTemplateFormatVersion: '2010-09-09'
 Description: APLM Lab
 Parameters:
